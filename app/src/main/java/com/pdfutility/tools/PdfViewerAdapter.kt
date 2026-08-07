@@ -16,6 +16,7 @@ import java.util.concurrent.ConcurrentHashMap
 
 class PdfViewerAdapter(
     private val context: Context,
+    private val scope: CoroutineScope,
     private val renderer: PdfRenderer,
     private val screenWidth: Int,
     private val onPageClick: (pageIndex: Int, x: Float, y: Float, viewWidth: Float, viewHeight: Float) -> Unit,
@@ -68,15 +69,19 @@ class PdfViewerAdapter(
             true
         }
         
-        holder.job = CoroutineScope(Dispatchers.IO).launch {
+        holder.job = scope.launch(Dispatchers.IO) {
             try {
                 var size = pageSizes[position]
                 if (size == null) {
                     synchronized(renderer) {
-                        if (position in 0 until renderer.pageCount) {
-                            val page = renderer.openPage(position)
-                            size = PointF(page.width.toFloat(), page.height.toFloat())
-                            page.close()
+                        try {
+                            if (position in 0 until renderer.pageCount) {
+                                val page = renderer.openPage(position)
+                                size = PointF(page.width.toFloat(), page.height.toFloat())
+                                page.close()
+                            }
+                        } catch (t: Throwable) {
+                            t.printStackTrace()
                         }
                     }
                     if (size != null) {
@@ -95,10 +100,14 @@ class PdfViewerAdapter(
                         bitmap.eraseColor(Color.WHITE)
                         
                         synchronized(renderer) {
-                            if (position in 0 until renderer.pageCount) {
-                                val page = renderer.openPage(position)
-                                page.render(bitmap, null, null, PdfRenderer.Page.RENDER_MODE_FOR_DISPLAY)
-                                page.close()
+                            try {
+                                if (position in 0 until renderer.pageCount) {
+                                    val page = renderer.openPage(position)
+                                    page.render(bitmap, null, null, PdfRenderer.Page.RENDER_MODE_FOR_DISPLAY)
+                                    page.close()
+                                }
+                            } catch (t: Throwable) {
+                                t.printStackTrace()
                             }
                         }
                         
@@ -124,8 +133,8 @@ class PdfViewerAdapter(
                         }
                     }
                 }
-            } catch (e: Exception) {
-                e.printStackTrace()
+            } catch (t: Throwable) {
+                t.printStackTrace()
             }
         }
     }

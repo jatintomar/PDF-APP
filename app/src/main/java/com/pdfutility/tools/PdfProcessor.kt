@@ -17,8 +17,8 @@ object PdfProcessor {
     fun init(context: Context) {
         try {
             com.tom_roush.pdfbox.android.PDFBoxResourceLoader.init(context.applicationContext)
-        } catch (e: Exception) {
-            e.printStackTrace()
+        } catch (t: Throwable) {
+            t.printStackTrace()
         }
     }
 

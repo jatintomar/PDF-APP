@@ -208,7 +208,7 @@ class ReaderFragment : Fragment() {
         binding.pbRendering.visibility = View.VISIBLE
 
         val context = requireContext()
-        val fileName = getFileName(context, uri)
+        val fileName = context.getFileName(uri)
         val isDocx = fileName.endsWith(".docx", ignoreCase = true)
 
         (activity as? androidx.appcompat.app.AppCompatActivity)?.supportActionBar?.title = fileName
@@ -245,7 +245,7 @@ class ReaderFragment : Fragment() {
                         PDDocument.load(tempFile).use { doc ->
                             isEncrypted = doc.isEncrypted
                         }
-                    } catch (e: Exception) {
+                    } catch (t: Throwable) {
                         isEncrypted = true
                     }
                 }
@@ -271,8 +271,8 @@ class ReaderFragment : Fragment() {
                             }
                         }
                         true
-                    } catch (e: Exception) {
-                        e.printStackTrace()
+                    } catch (t: Throwable) {
+                        t.printStackTrace()
                         false
                     }
                 }
@@ -298,7 +298,7 @@ class ReaderFragment : Fragment() {
                     pdfRenderer = renderer
                     
                     val metrics = resources.displayMetrics
-                    pdfAdapter = PdfViewerAdapter(context, renderer, metrics.widthPixels,
+                    pdfAdapter = PdfViewerAdapter(context, lifecycleScope, renderer, metrics.widthPixels,
                         onPageClick = { pageIndex, x, y, viewWidth, viewHeight ->
                             handlePageClick(pageIndex, x, y, viewWidth, viewHeight)
                         },
@@ -331,8 +331,8 @@ class ReaderFragment : Fragment() {
                     withContext(Dispatchers.IO) {
                         try {
                             pdDocument = PDDocument.load(decryptedFileLocal)
-                        } catch (e: Exception) {
-                            e.printStackTrace()
+                        } catch (t: Throwable) {
+                            t.printStackTrace()
                         }
                     }
                     
@@ -391,7 +391,7 @@ class ReaderFragment : Fragment() {
                     pdfRenderer = renderer
 
                     val metrics = resources.displayMetrics
-                    pdfAdapter = PdfViewerAdapter(context, renderer, metrics.widthPixels,
+                    pdfAdapter = PdfViewerAdapter(context, lifecycleScope, renderer, metrics.widthPixels,
                         onPageClick = { pageIndex, x, y, viewWidth, viewHeight ->
                             handlePageClick(pageIndex, x, y, viewWidth, viewHeight)
                         },
@@ -424,8 +424,8 @@ class ReaderFragment : Fragment() {
                     withContext(Dispatchers.IO) {
                         try {
                             pdDocument = PDDocument.load(tempFile)
-                        } catch (e: Exception) {
-                            e.printStackTrace()
+                        } catch (t: Throwable) {
+                            t.printStackTrace()
                         }
                     }
                 } catch (e: Exception) {
@@ -459,7 +459,7 @@ class ReaderFragment : Fragment() {
                     } else {
                         PDDocument.load(fileToLoad)
                     }
-                } catch (e: Exception) {
+                } catch (t: Throwable) {
                     null
                 }
                 
@@ -474,8 +474,8 @@ class ReaderFragment : Fragment() {
                                 results.add(i)
                             }
                         }
-                    } catch (e: Exception) {
-                        e.printStackTrace()
+                    } catch (t: Throwable) {
+                        t.printStackTrace()
                     }
                 }
                 results
@@ -531,31 +531,6 @@ class ReaderFragment : Fragment() {
         (activity as? androidx.appcompat.app.AppCompatActivity)?.supportActionBar?.title = "PDF Reader"
     }
 
-    private fun getFileName(context: Context, uri: Uri): String {
-        var result: String? = null
-        if (uri.scheme == "content") {
-            val cursor = context.contentResolver.query(uri, null, null, null, null)
-            try {
-                if (cursor != null && cursor.moveToFirst()) {
-                    val index = cursor.getColumnIndex(OpenableColumns.DISPLAY_NAME)
-                    if (index >= 0) {
-                        result = cursor.getString(index)
-                    }
-                }
-            } finally {
-                cursor?.close()
-            }
-        }
-        if (result == null) {
-            result = uri.path
-            val cut = result?.lastIndexOf('/') ?: -1
-            if (cut != -1) {
-                result = result?.substring(cut + 1)
-            }
-        }
-        return result ?: "document.pdf"
-    }
-
     private fun sharePdf() {
         val uri = currentPdfUri ?: return
         try {
@@ -590,8 +565,8 @@ class ReaderFragment : Fragment() {
                         }
                     }
                     true
-                } catch (e: Exception) {
-                    e.printStackTrace()
+                } catch (t: Throwable) {
+                    t.printStackTrace()
                     false
                 }
             }
@@ -861,8 +836,8 @@ class ReaderFragment : Fragment() {
                     stripper.startPage = pageIndex + 1
                     stripper.endPage = pageIndex + 1
                     stripper.getText(doc)
-                } catch (e: Exception) {
-                    e.printStackTrace()
+                } catch (t: Throwable) {
+                    t.printStackTrace()
                     null
                 }
             }
