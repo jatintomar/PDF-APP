@@ -246,7 +246,6 @@ class PdfListFragment : Fragment() {
                             scanDirectoryRecursive(dir, list)
                         }
                     }
-                    scanDirectoryRecursive(requireContext().cacheDir, list)
                 } catch (e: Exception) {
                     e.printStackTrace()
                 }

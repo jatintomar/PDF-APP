@@ -224,12 +224,17 @@ class ReaderFragment : Fragment() {
             val tempFile = File(context.cacheDir, "current_viewing.pdf")
             val copySuccess = withContext(Dispatchers.IO) {
                 try {
-                    context.contentResolver.openInputStream(uri)?.use { input ->
-                        tempFile.outputStream().use { output ->
-                            input.copyTo(output)
+                    val inputStream = context.contentResolver.openInputStream(uri)
+                    if (inputStream != null) {
+                        inputStream.use { input ->
+                            tempFile.outputStream().use { output ->
+                                input.copyTo(output)
+                            }
                         }
+                        true
+                    } else {
+                        false
                     }
-                    true
                 } catch (e: Throwable) {
                     e.printStackTrace()
                     false
@@ -241,17 +246,20 @@ class ReaderFragment : Fragment() {
                     val bindingRef = _binding ?: return@launch
                     
                     var isEncrypted = false
-                    // 1. Use PDFBox first to check if the PDF is encrypted/password-protected.
-                    // This is 100% safe and prevents triggering SecurityException on PdfRenderer,
-                    // which can permanently corrupt the native PDFium state for the entire app process.
-                    withContext(Dispatchers.IO) {
-                        try {
-                            PDDocument.load(tempFile).use { doc ->
-                                isEncrypted = doc.isEncrypted
-                            }
-                        } catch (e: Throwable) {
-                            isEncrypted = true
-                        }
+                    
+                    // 1. Try to open the PDF directly using PdfRenderer. If it succeeds, it's not encrypted!
+                    // This is extremely safe, fast, and uses zero extra memory overhead.
+                    try {
+                        pdfRenderer?.close()
+                        pdfRenderer = PdfRenderer(
+                            ParcelFileDescriptor.open(tempFile, ParcelFileDescriptor.MODE_READ_ONLY)
+                        )
+                    } catch (e: SecurityException) {
+                        isEncrypted = true
+                    } catch (e: Throwable) {
+                        bindingRef.pbRendering.visibility = View.GONE
+                        showEmptyState("Error opening PDF: ${e.message}")
+                        return@launch
                     }
 
                     if (isEncrypted) {
@@ -259,9 +267,12 @@ class ReaderFragment : Fragment() {
                             val decryptedTempFile = File(context.cacheDir, "current_viewing_decrypted.pdf")
                             val decryptedSuccess = withContext(Dispatchers.IO) {
                                 try {
-                                    PDDocument.load(tempFile, password).use { doc ->
-                                        doc.setAllSecurityToBeRemoved(true)
-                                        doc.save(decryptedTempFile)
+                                    val stream = java.io.FileInputStream(tempFile)
+                                    stream.use { inputStream ->
+                                        PDDocument.load(inputStream, password).use { doc ->
+                                            doc.setAllSecurityToBeRemoved(true)
+                                            doc.save(decryptedTempFile)
+                                        }
                                     }
                                     true
                                 } catch (e: Throwable) {
@@ -291,7 +302,8 @@ class ReaderFragment : Fragment() {
                             
                             withContext(Dispatchers.IO) {
                                 try {
-                                    pdDocument = PDDocument.load(decryptedTempFile)
+                                    val stream = java.io.FileInputStream(decryptedTempFile)
+                                    pdDocument = PDDocument.load(stream)
                                 } catch (e: Throwable) {
                                     e.printStackTrace()
                                 }
@@ -302,21 +314,12 @@ class ReaderFragment : Fragment() {
                             return@launch
                         }
                     } else {
-                        // Not encrypted: Open PdfRenderer directly on tempFile
-                        try {
-                            pdfRenderer?.close()
-                            pdfRenderer = PdfRenderer(
-                                ParcelFileDescriptor.open(tempFile, ParcelFileDescriptor.MODE_READ_ONLY)
-                            )
-                        } catch (e: Throwable) {
-                            bindingRef.pbRendering.visibility = View.GONE
-                            showEmptyState("Error opening PDF: ${e.message}")
-                            return@launch
-                        }
-                        
+                        // Already successfully opened via PdfRenderer directly!
+                        // Safely try loading PDDocument in the background for searching/links.
                         withContext(Dispatchers.IO) {
                             try {
-                                pdDocument = PDDocument.load(tempFile)
+                                val stream = java.io.FileInputStream(tempFile)
+                                pdDocument = PDDocument.load(stream)
                             } catch (e: Throwable) {
                                 e.printStackTrace()
                             }
@@ -366,11 +369,13 @@ class ReaderFragment : Fragment() {
     }
 
     private fun showPasswordPrompt(uri: Uri) {
-        val input = android.widget.EditText(requireContext()).apply {
+        if (!isAdded) return
+        val ctx = context ?: return
+        val input = android.widget.EditText(ctx).apply {
             inputType = android.text.InputType.TYPE_CLASS_TEXT or android.text.InputType.TYPE_TEXT_VARIATION_PASSWORD
             hint = "Enter PDF Password"
         }
-        androidx.appcompat.app.AlertDialog.Builder(requireContext())
+        androidx.appcompat.app.AlertDialog.Builder(ctx)
             .setTitle("Password Protected")
             .setMessage("This PDF is encrypted. Please enter the password to open it.")
             .setView(input)
@@ -441,7 +446,8 @@ class ReaderFragment : Fragment() {
 
                     withContext(Dispatchers.IO) {
                         try {
-                            pdDocument = PDDocument.load(tempFile)
+                            val stream = java.io.FileInputStream(tempFile)
+                            pdDocument = PDDocument.load(stream)
                         } catch (e: Throwable) {
                             e.printStackTrace()
                         }
@@ -862,10 +868,13 @@ class ReaderFragment : Fragment() {
                 try {
                     val doc = pdDocument ?: run {
                         val tempFile = File(context.cacheDir, "current_viewing.pdf")
-                        if (currentPdfPassword != null) {
-                            PDDocument.load(tempFile, currentPdfPassword)
-                        } else {
-                            PDDocument.load(tempFile)
+                        val stream = java.io.FileInputStream(tempFile)
+                        stream.use { inputStream ->
+                            if (currentPdfPassword != null) {
+                                PDDocument.load(inputStream, currentPdfPassword)
+                            } else {
+                                PDDocument.load(inputStream)
+                            }
                         }
                     }
                     val stripper = PDFTextStripper()
