@@ -939,12 +939,3 @@ class ReaderFragment : Fragment() {
         _binding = null
     }
 }
-
-private fun String.addTagToFileName(tag: String): String {
-    val dotIndex = this.lastIndexOf('.')
-    return if (dotIndex != -1) {
-        "${this.substring(0, dotIndex)}_$tag${this.substring(dotIndex)}"
-    } else {
-        "${this}_$tag"
-    }
-}
