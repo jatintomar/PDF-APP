@@ -298,7 +298,7 @@ class ReaderFragment : Fragment() {
                     pdfRenderer = renderer
                     
                     val metrics = resources.displayMetrics
-                    pdfAdapter = PdfViewerAdapter(context, lifecycleScope, renderer, metrics.widthPixels,
+                    pdfAdapter = PdfViewerAdapter(context, viewLifecycleOwner.lifecycleScope, renderer, metrics.widthPixels,
                         onPageClick = { pageIndex, x, y, viewWidth, viewHeight ->
                             handlePageClick(pageIndex, x, y, viewWidth, viewHeight)
                         },
@@ -391,7 +391,7 @@ class ReaderFragment : Fragment() {
                     pdfRenderer = renderer
 
                     val metrics = resources.displayMetrics
-                    pdfAdapter = PdfViewerAdapter(context, lifecycleScope, renderer, metrics.widthPixels,
+                    pdfAdapter = PdfViewerAdapter(context, viewLifecycleOwner.lifecycleScope, renderer, metrics.widthPixels,
                         onPageClick = { pageIndex, x, y, viewWidth, viewHeight ->
                             handlePageClick(pageIndex, x, y, viewWidth, viewHeight)
                         },
@@ -902,9 +902,14 @@ class ReaderFragment : Fragment() {
     override fun onDestroyView() {
         pdDocument?.close()
         pdDocument = null
-        try {
-            pdfRenderer?.close()
-        } catch (e: Exception) {}
+        val rendererToClose = pdfRenderer
+        if (rendererToClose != null) {
+            synchronized(rendererToClose) {
+                try {
+                    rendererToClose.close()
+                } catch (e: Exception) {}
+            }
+        }
         pdfRenderer = null
         try {
             parcelFileDescriptor?.close()

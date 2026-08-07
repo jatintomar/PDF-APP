@@ -274,21 +274,34 @@ class PdfListFragment : Fragment() {
         }
     }
 
-    private fun scanDirectoryRecursive(directory: File, results: MutableList<DiscoveredPdf>) {
-        val files = directory.listFiles() ?: return
+    private fun scanDirectoryRecursive(directory: File, results: MutableList<DiscoveredPdf>, depth: Int = 0) {
+        if (depth > 4) return // Safe depth limit to prevent StackOverflowError or extreme memory usage
+        val files = try {
+            directory.listFiles()
+        } catch (t: Throwable) {
+            null
+        } ?: return
         for (file in files) {
-            if (file.isDirectory) {
-                scanDirectoryRecursive(file, results)
-            } else if (file.name.endsWith(".pdf", ignoreCase = true) || file.name.endsWith(".docx", ignoreCase = true)) {
-                results.add(
-                    DiscoveredPdf(
-                        uri = Uri.fromFile(file),
-                        name = file.name,
-                        size = file.length(),
-                        dateModified = file.lastModified(),
-                        path = file.parentFile?.absolutePath ?: file.parent ?: ""
+            try {
+                if (file.isDirectory) {
+                    val nameLower = file.name.lowercase(Locale.getDefault())
+                    // Skip hidden folders, system Android directory, cache, and temp/obsolete system directories
+                    if (!file.name.startsWith(".") && nameLower != "android" && nameLower != "cache" && nameLower != "temp" && nameLower != "self" && nameLower != "emulated") {
+                        scanDirectoryRecursive(file, results, depth + 1)
+                    }
+                } else if (file.name.endsWith(".pdf", ignoreCase = true) || file.name.endsWith(".docx", ignoreCase = true)) {
+                    results.add(
+                        DiscoveredPdf(
+                            uri = Uri.fromFile(file),
+                            name = file.name,
+                            size = file.length(),
+                            dateModified = file.lastModified(),
+                            path = file.parentFile?.absolutePath ?: file.parent ?: ""
+                        )
                     )
-                )
+                }
+            } catch (t: Throwable) {
+                t.printStackTrace()
             }
         }
     }

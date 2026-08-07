@@ -141,8 +141,12 @@ class PdfViewerAdapter(
 
     override fun getItemCount(): Int {
         var count = 0
-        synchronized(renderer) {
-            count = renderer.pageCount
+        try {
+            synchronized(renderer) {
+                count = renderer.pageCount
+            }
+        } catch (t: Throwable) {
+            t.printStackTrace()
         }
         return count
     }
