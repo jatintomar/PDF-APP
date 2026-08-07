@@ -111,15 +111,6 @@
             app:tint="@color/on_surface_variant"
             android:layout_marginStart="8dp" />
 
-        <!-- Action Items (Delete) -->
-        <ImageButton
-            android:id="@+id/btn_discovered_delete"
-            android:layout_width="36dp"
-            android:layout_height="36dp"
-            android:background="?attr/selectableItemBackgroundBorderless"
-            android:src="@android:drawable/ic_menu_delete"
-            android:contentDescription="Delete file"
-            app:tint="@color/error"
-            android:layout_marginStart="8dp" />
+
     </LinearLayout>
 </com.google.android.material.card.MaterialCardView>
