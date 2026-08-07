@@ -14,8 +14,7 @@ import androidx.fragment.app.Fragment
 import androidx.lifecycle.lifecycleScope
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
-import android.graphics.pdf.PdfRenderer
-import android.os.ParcelFileDescriptor
+import com.artifex.mupdf.viewer.MuPDFCore
 import com.pdfutility.tools.databinding.FragmentReaderBinding
 import com.tom_roush.pdfbox.pdmodel.PDDocument
 import com.tom_roush.pdfbox.text.PDFTextStripper
@@ -39,7 +38,7 @@ class ReaderFragment : Fragment() {
     private var totalPages = 0
     private var currentPage = 0
     
-    private var pdfRenderer: PdfRenderer? = null
+    private var core: MuPDFCore? = null
     private var pdfAdapter: PdfViewerAdapter? = null
     private var currentSearchQuery: String? = null
     
@@ -201,10 +200,9 @@ class ReaderFragment : Fragment() {
 
     private fun loadPdf(uri: Uri, password: String? = null) {
         currentPdfUri = uri
-        val initialBinding = _binding ?: return
-        initialBinding.llEmptyState.visibility = View.GONE
-        initialBinding.llReaderContent.visibility = View.VISIBLE
-        initialBinding.pbRendering.visibility = View.VISIBLE
+        binding.llEmptyState.visibility = View.GONE
+        binding.llReaderContent.visibility = View.VISIBLE
+        binding.pbRendering.visibility = View.VISIBLE
 
         val context = requireContext()
         val fileName = getFileName(context, uri)
@@ -224,18 +222,13 @@ class ReaderFragment : Fragment() {
             val tempFile = File(context.cacheDir, "current_viewing.pdf")
             val copySuccess = withContext(Dispatchers.IO) {
                 try {
-                    val inputStream = context.contentResolver.openInputStream(uri)
-                    if (inputStream != null) {
-                        inputStream.use { input ->
-                            tempFile.outputStream().use { output ->
-                                input.copyTo(output)
-                            }
+                    context.contentResolver.openInputStream(uri)?.use { input ->
+                        tempFile.outputStream().use { output ->
+                            input.copyTo(output)
                         }
-                        true
-                    } else {
-                        false
                     }
-                } catch (e: Throwable) {
+                    true
+                } catch (e: Exception) {
                     e.printStackTrace()
                     false
                 }
@@ -243,91 +236,20 @@ class ReaderFragment : Fragment() {
 
             if (copySuccess) {
                 try {
-                    val bindingRef = _binding ?: return@launch
+                    core = MuPDFCore(tempFile.readBytes(), "pdf")
                     
-                    var isEncrypted = false
-                    
-                    // 1. Try to open the PDF directly using PdfRenderer. If it succeeds, it's not encrypted!
-                    // This is extremely safe, fast, and uses zero extra memory overhead.
-                    try {
-                        pdfRenderer?.close()
-                        pdfRenderer = PdfRenderer(
-                            ParcelFileDescriptor.open(tempFile, ParcelFileDescriptor.MODE_READ_ONLY)
-                        )
-                    } catch (e: SecurityException) {
-                        isEncrypted = true
-                    } catch (e: Throwable) {
-                        bindingRef.pbRendering.visibility = View.GONE
-                        showEmptyState("Error opening PDF: ${e.message}")
-                        return@launch
-                    }
-
-                    if (isEncrypted) {
-                        if (password != null) {
-                            val decryptedTempFile = File(context.cacheDir, "current_viewing_decrypted.pdf")
-                            val decryptedSuccess = withContext(Dispatchers.IO) {
-                                try {
-                                    val stream = java.io.FileInputStream(tempFile)
-                                    stream.use { inputStream ->
-                                        PDDocument.load(inputStream, password).use { doc ->
-                                            doc.setAllSecurityToBeRemoved(true)
-                                            doc.save(decryptedTempFile)
-                                        }
-                                    }
-                                    true
-                                } catch (e: Throwable) {
-                                    e.printStackTrace()
-                                    false
-                                }
-                            }
-                            if (!decryptedSuccess) {
-                                bindingRef.pbRendering.visibility = View.GONE
-                                Toast.makeText(context, "Invalid PDF password", Toast.LENGTH_SHORT).show()
-                                showPasswordPrompt(uri)
-                                return@launch
-                            }
-                            
-                            // Re-open PdfRenderer with the decrypted file
-                            try {
-                                pdfRenderer?.close()
-                                pdfRenderer = PdfRenderer(
-                                    ParcelFileDescriptor.open(decryptedTempFile, ParcelFileDescriptor.MODE_READ_ONLY)
-                                )
-                            } catch (e: Throwable) {
-                                bindingRef.pbRendering.visibility = View.GONE
-                                Toast.makeText(context, "Error reading decrypted PDF", Toast.LENGTH_SHORT).show()
-                                showEmptyState("Error reading decrypted PDF: ${e.message}")
-                                return@launch
-                            }
-                            
-                            withContext(Dispatchers.IO) {
-                                try {
-                                    val stream = java.io.FileInputStream(decryptedTempFile)
-                                    pdDocument = PDDocument.load(stream)
-                                } catch (e: Throwable) {
-                                    e.printStackTrace()
-                                }
-                            }
+                    if (core!!.needsPassword()) {
+                        if (password != null && core!!.authenticatePassword(password)) {
+                            // Password accepted
                         } else {
-                            bindingRef.pbRendering.visibility = View.GONE
+                            binding.pbRendering.visibility = View.GONE
                             showPasswordPrompt(uri)
                             return@launch
                         }
-                    } else {
-                        // Already successfully opened via PdfRenderer directly!
-                        // Safely try loading PDDocument in the background for searching/links.
-                        withContext(Dispatchers.IO) {
-                            try {
-                                val stream = java.io.FileInputStream(tempFile)
-                                pdDocument = PDDocument.load(stream)
-                            } catch (e: Throwable) {
-                                e.printStackTrace()
-                            }
-                        }
                     }
                     
-                    val metrics = context.resources.displayMetrics
-                    pdfAdapter = PdfViewerAdapter(context, pdfRenderer!!, metrics.widthPixels,
+                    val metrics = resources.displayMetrics
+                    pdfAdapter = PdfViewerAdapter(context, core!!, metrics.widthPixels,
                         onPageClick = { pageIndex, x, y, viewWidth, viewHeight ->
                             handlePageClick(pageIndex, x, y, viewWidth, viewHeight)
                         },
@@ -335,47 +257,57 @@ class ReaderFragment : Fragment() {
                             handlePageLongClick(pageIndex)
                         }
                     )
-                    bindingRef.pdfRecyclerView.adapter = pdfAdapter
+                    binding.pdfRecyclerView.adapter = pdfAdapter
                     
-                    bindingRef.pbRendering.visibility = View.GONE
-                    totalPages = pdfRenderer!!.pageCount
+                    binding.pbRendering.visibility = View.GONE
+                    totalPages = core!!.countPages()
                     
-                    val savedPage = getSavedPage(context, uri)
-                    val savedScale = getSavedScale(context, uri)
-                    val savedTransX = getSavedTransX(context, uri)
-                    val savedTransY = getSavedTransY(context, uri)
+                    val savedPage = getSavedPage(uri)
+                    val savedScale = getSavedScale(uri)
+                    val savedTransX = getSavedTransX(uri)
+                    val savedTransY = getSavedTransY(uri)
                     
                     if (savedPage in 0 until totalPages) {
                         currentPage = savedPage
-                        bindingRef.pdfRecyclerView.scrollToPosition(savedPage)
+                        binding.pdfRecyclerView.scrollToPosition(savedPage)
                     }
                     if (savedScale > 1f) {
-                        bindingRef.pdfRecyclerView.post {
-                            _binding?.pdfRecyclerView?.setZoom(savedScale, savedTransX, savedTransY)
+                        binding.pdfRecyclerView.post {
+                            binding.pdfRecyclerView.setZoom(savedScale, savedTransX, savedTransY)
                         }
                     }
                     
                     (activity as? androidx.appcompat.app.AppCompatActivity)?.supportActionBar?.subtitle = "Page ${currentPage + 1} of $totalPages"
+
+                    withContext(Dispatchers.IO) {
+                        try {
+                            pdDocument = if (password != null) {
+                                PDDocument.load(tempFile, password)
+                            } else {
+                                PDDocument.load(tempFile)
+                            }
+                        } catch (e: Exception) {
+                            e.printStackTrace()
+                        }
+                    }
                     
-                } catch (e: Throwable) {
-                    _binding?.pbRendering?.visibility = View.GONE
+                } catch (e: Exception) {
+                    binding.pbRendering.visibility = View.GONE
                     showEmptyState("Error loading PDF: ${e.message}")
                 }
             } else {
-                _binding?.pbRendering?.visibility = View.GONE
+                binding.pbRendering.visibility = View.GONE
                 showEmptyState("Failed to access the PDF file.")
             }
         }
     }
 
     private fun showPasswordPrompt(uri: Uri) {
-        if (!isAdded) return
-        val ctx = context ?: return
-        val input = android.widget.EditText(ctx).apply {
+        val input = android.widget.EditText(requireContext()).apply {
             inputType = android.text.InputType.TYPE_CLASS_TEXT or android.text.InputType.TYPE_TEXT_VARIATION_PASSWORD
             hint = "Enter PDF Password"
         }
-        androidx.appcompat.app.AlertDialog.Builder(ctx)
+        androidx.appcompat.app.AlertDialog.Builder(requireContext())
             .setTitle("Password Protected")
             .setMessage("This PDF is encrypted. Please enter the password to open it.")
             .setView(input)
@@ -400,7 +332,7 @@ class ReaderFragment : Fragment() {
                 try {
                     PdfProcessor.convertDocxToPdf(context, uri, tempFile)
                     true
-                } catch (e: Throwable) {
+                } catch (e: Exception) {
                     e.printStackTrace()
                     false
                 }
@@ -408,13 +340,9 @@ class ReaderFragment : Fragment() {
 
             if (success) {
                 try {
-                    val bindingRef = _binding ?: return@launch
-                    pdfRenderer?.close()
-                    pdfRenderer = PdfRenderer(
-                        ParcelFileDescriptor.open(tempFile, ParcelFileDescriptor.MODE_READ_ONLY)
-                    )
-                    val metrics = context.resources.displayMetrics
-                    pdfAdapter = PdfViewerAdapter(context, pdfRenderer!!, metrics.widthPixels,
+                    core = MuPDFCore(tempFile.readBytes(), "pdf")
+                    val metrics = resources.displayMetrics
+                    pdfAdapter = PdfViewerAdapter(context, core!!, metrics.widthPixels,
                         onPageClick = { pageIndex, x, y, viewWidth, viewHeight ->
                             handlePageClick(pageIndex, x, y, viewWidth, viewHeight)
                         },
@@ -422,23 +350,23 @@ class ReaderFragment : Fragment() {
                             handlePageLongClick(pageIndex)
                         }
                     )
-                    bindingRef.pdfRecyclerView.adapter = pdfAdapter
-                    bindingRef.pbRendering.visibility = View.GONE
+                    binding.pdfRecyclerView.adapter = pdfAdapter
+                    binding.pbRendering.visibility = View.GONE
                     
-                    totalPages = pdfRenderer!!.pageCount
+                    totalPages = core!!.countPages()
                     
-                    val savedPage = getSavedPage(context, uri)
-                    val savedScale = getSavedScale(context, uri)
-                    val savedTransX = getSavedTransX(context, uri)
-                    val savedTransY = getSavedTransY(context, uri)
+                    val savedPage = getSavedPage(uri)
+                    val savedScale = getSavedScale(uri)
+                    val savedTransX = getSavedTransX(uri)
+                    val savedTransY = getSavedTransY(uri)
                     
                     if (savedPage in 0 until totalPages) {
                         currentPage = savedPage
-                        bindingRef.pdfRecyclerView.scrollToPosition(savedPage)
+                        binding.pdfRecyclerView.scrollToPosition(savedPage)
                     }
                     if (savedScale > 1f) {
-                        bindingRef.pdfRecyclerView.post {
-                            _binding?.pdfRecyclerView?.setZoom(savedScale, savedTransX, savedTransY)
+                        binding.pdfRecyclerView.post {
+                            binding.pdfRecyclerView.setZoom(savedScale, savedTransX, savedTransY)
                         }
                     }
                     
@@ -446,18 +374,17 @@ class ReaderFragment : Fragment() {
 
                     withContext(Dispatchers.IO) {
                         try {
-                            val stream = java.io.FileInputStream(tempFile)
-                            pdDocument = PDDocument.load(stream)
-                        } catch (e: Throwable) {
+                            pdDocument = PDDocument.load(tempFile)
+                        } catch (e: Exception) {
                             e.printStackTrace()
                         }
                     }
-                } catch (e: Throwable) {
-                    _binding?.pbRendering?.visibility = View.GONE
+                } catch (e: Exception) {
+                    binding.pbRendering.visibility = View.GONE
                     showEmptyState("Error loading PDF: ${e.message}")
                 }
             } else {
-                _binding?.pbRendering?.visibility = View.GONE
+                binding.pbRendering.visibility = View.GONE
                 showEmptyState("Failed to convert DOCX to PDF.")
             }
         }
@@ -468,34 +395,22 @@ class ReaderFragment : Fragment() {
 
     private fun performSearch(query: String) {
         if (query.isEmpty()) return
-        val initialBinding = _binding ?: return
-        initialBinding.pbRendering.visibility = View.VISIBLE
-        initialBinding.llSearchNavigation.visibility = View.GONE
+        binding.pbRendering.visibility = View.VISIBLE
+        binding.llSearchNavigation.visibility = View.GONE
         
         lifecycleScope.launch {
             val matches = withContext(Dispatchers.IO) {
                 val results = mutableListOf<Int>()
-                val doc = pdDocument
-                if (doc != null) {
-                    try {
-                        val stripper = PDFTextStripper()
-                        for (i in 0 until totalPages) {
-                            stripper.startPage = i + 1
-                            stripper.endPage = i + 1
-                            val text = stripper.getText(doc)
-                            if (text != null && text.contains(query, ignoreCase = true)) {
-                                results.add(i)
-                            }
-                        }
-                    } catch (e: Exception) {
-                        e.printStackTrace()
+                for (i in 0 until totalPages) {
+                    val boxes = core?.searchPage(i, query)
+                    if (boxes != null && boxes.isNotEmpty()) {
+                        results.add(i)
                     }
                 }
                 results
             }
 
-            val bindingRef = _binding ?: return@launch
-            bindingRef.pbRendering.visibility = View.GONE
+            binding.pbRendering.visibility = View.GONE
             currentSearchQuery = query
             
             if (matches.isNotEmpty()) {
@@ -505,15 +420,14 @@ class ReaderFragment : Fragment() {
                 
                 pdfAdapter?.setSearchQuery(query, searchResults[currentSearchIndex])
                 
-                bindingRef.llSearchNavigation.visibility = View.VISIBLE
+                binding.llSearchNavigation.visibility = View.VISIBLE
                 updateSearchUI()
-                bindingRef.pdfRecyclerView.scrollToPosition(searchResults[currentSearchIndex])
+                binding.pdfRecyclerView.scrollToPosition(searchResults[currentSearchIndex])
             } else {
                 pdfAdapter?.setSearchQuery(null, -1)
                 searchResults.clear()
                 currentSearchIndex = -1
-                val contextRef = _binding?.root?.context ?: return@launch
-                Toast.makeText(contextRef, "No matches found for '$query'", Toast.LENGTH_SHORT).show()
+                Toast.makeText(requireContext(), "No matches found for '$query'", Toast.LENGTH_SHORT).show()
             }
         }
     }
@@ -535,13 +449,12 @@ class ReaderFragment : Fragment() {
     }
 
     private fun showEmptyState(message: String? = null) {
-        val bindingRef = _binding ?: return
-        bindingRef.llEmptyState.visibility = View.VISIBLE
-        bindingRef.llReaderContent.visibility = View.GONE
+        binding.llEmptyState.visibility = View.VISIBLE
+        binding.llReaderContent.visibility = View.GONE
         if (message != null) {
-            val tvTitle = bindingRef.llEmptyState.getChildAt(1) as? android.widget.TextView
+            val tvTitle = binding.llEmptyState.getChildAt(1) as? android.widget.TextView
             tvTitle?.text = "Failed to Open PDF"
-            val tvDesc = bindingRef.llEmptyState.getChildAt(2) as? android.widget.TextView
+            val tvDesc = binding.llEmptyState.getChildAt(2) as? android.widget.TextView
             tvDesc?.text = message
         }
         (activity as? androidx.appcompat.app.AppCompatActivity)?.supportActionBar?.title = "PDF Reader"
@@ -550,28 +463,23 @@ class ReaderFragment : Fragment() {
     private fun getFileName(context: Context, uri: Uri): String {
         var result: String? = null
         if (uri.scheme == "content") {
+            val cursor = context.contentResolver.query(uri, null, null, null, null)
             try {
-                context.contentResolver.query(uri, null, null, null, null)?.use { cursor ->
-                    if (cursor.moveToFirst()) {
-                        val index = cursor.getColumnIndex(OpenableColumns.DISPLAY_NAME)
-                        if (index >= 0) {
-                            result = cursor.getString(index)
-                        }
+                if (cursor != null && cursor.moveToFirst()) {
+                    val index = cursor.getColumnIndex(OpenableColumns.DISPLAY_NAME)
+                    if (index >= 0) {
+                        result = cursor.getString(index)
                     }
                 }
-            } catch (e: Throwable) {
-                e.printStackTrace()
+            } finally {
+                cursor?.close()
             }
         }
         if (result == null) {
-            try {
-                result = uri.path
-                val cut = result?.lastIndexOf('/') ?: -1
-                if (cut != -1) {
-                    result = result?.substring(cut + 1)
-                }
-            } catch (e: Throwable) {
-                e.printStackTrace()
+            result = uri.path
+            val cut = result?.lastIndexOf('/') ?: -1
+            if (cut != -1) {
+                result = result?.substring(cut + 1)
             }
         }
         return result ?: "document.pdf"
@@ -594,18 +502,16 @@ class ReaderFragment : Fragment() {
     private fun saveUnlockedPdf(destUri: Uri) {
         val uri = currentPdfUri ?: return
         val pwd = currentPdfPassword ?: return
-        val context = requireContext()
-        val initialBinding = _binding ?: return
-        initialBinding.pbRendering.visibility = View.VISIBLE
         lifecycleScope.launch {
+            binding.pbRendering.visibility = View.VISIBLE
             val success = withContext(Dispatchers.IO) {
                 try {
-                    context.contentResolver.openInputStream(uri).use { inputStream ->
+                    requireContext().contentResolver.openInputStream(uri).use { inputStream ->
                         if (inputStream == null) throw Exception("Cannot open stream")
                         PDDocument.load(inputStream, pwd).use { document ->
                             PdfProcessor.cleanWatermark(document)
                             document.setAllSecurityToBeRemoved(true)
-                            context.contentResolver.openOutputStream(destUri).use { outputStream ->
+                            requireContext().contentResolver.openOutputStream(destUri).use { outputStream ->
                                 if (outputStream != null) {
                                     document.save(outputStream)
                                 }
@@ -618,13 +524,11 @@ class ReaderFragment : Fragment() {
                     false
                 }
             }
-            val bindingRef = _binding ?: return@launch
-            bindingRef.pbRendering.visibility = View.GONE
-            val contextRef = _binding?.root?.context ?: return@launch
+            binding.pbRendering.visibility = View.GONE
             if (success) {
-                Toast.makeText(contextRef, "Unlocked PDF saved successfully", Toast.LENGTH_SHORT).show()
+                Toast.makeText(requireContext(), "Unlocked PDF saved successfully", Toast.LENGTH_SHORT).show()
             } else {
-                Toast.makeText(contextRef, "Failed to save unlocked PDF", Toast.LENGTH_SHORT).show()
+                Toast.makeText(requireContext(), "Failed to save unlocked PDF", Toast.LENGTH_SHORT).show()
             }
         }
     }
@@ -742,34 +646,37 @@ class ReaderFragment : Fragment() {
         }
     }
 
-    private fun getSavedPage(context: Context, uri: Uri): Int {
-        val prefs = context.getSharedPreferences("pdf_reader_positions", Context.MODE_PRIVATE)
+    private fun getSavedPage(uri: Uri): Int {
+        if (!isAdded) return 0
+        val prefs = requireContext().getSharedPreferences("pdf_reader_positions", Context.MODE_PRIVATE)
         return prefs.getInt("page_${uri}", 0)
     }
 
-    private fun getSavedScale(context: Context, uri: Uri): Float {
-        val prefs = context.getSharedPreferences("pdf_reader_positions", Context.MODE_PRIVATE)
+    private fun getSavedScale(uri: Uri): Float {
+        if (!isAdded) return 1f
+        val prefs = requireContext().getSharedPreferences("pdf_reader_positions", Context.MODE_PRIVATE)
         return prefs.getFloat("scale_${uri}", 1f)
     }
 
-    private fun getSavedTransX(context: Context, uri: Uri): Float {
-        val prefs = context.getSharedPreferences("pdf_reader_positions", Context.MODE_PRIVATE)
+    private fun getSavedTransX(uri: Uri): Float {
+        if (!isAdded) return 0f
+        val prefs = requireContext().getSharedPreferences("pdf_reader_positions", Context.MODE_PRIVATE)
         return prefs.getFloat("transX_${uri}", 0f)
     }
 
-    private fun getSavedTransY(context: Context, uri: Uri): Float {
-        val prefs = context.getSharedPreferences("pdf_reader_positions", Context.MODE_PRIVATE)
+    private fun getSavedTransY(uri: Uri): Float {
+        if (!isAdded) return 0f
+        val prefs = requireContext().getSharedPreferences("pdf_reader_positions", Context.MODE_PRIVATE)
         return prefs.getFloat("transY_${uri}", 0f)
     }
 
     private fun saveLastReadPosition() {
         val uri = currentPdfUri ?: return
         if (!isAdded) return
-        val bindingRef = _binding ?: return
         val prefs = requireContext().getSharedPreferences("pdf_reader_positions", Context.MODE_PRIVATE)
-        val scale = bindingRef.pdfRecyclerView.getZoomScale()
-        val transX = bindingRef.pdfRecyclerView.getTranslationXVal()
-        val transY = bindingRef.pdfRecyclerView.getTranslationYVal()
+        val scale = binding.pdfRecyclerView.getZoomScale()
+        val transX = binding.pdfRecyclerView.getTranslationXVal()
+        val transY = binding.pdfRecyclerView.getTranslationYVal()
         
         prefs.edit().apply {
             putInt("page_${uri}", currentPage)
@@ -866,20 +773,16 @@ class ReaderFragment : Fragment() {
 
     private fun handlePageLongClick(pageIndex: Int) {
         val context = requireContext()
-        val initialBinding = _binding ?: return
-        initialBinding.pbRendering.visibility = View.VISIBLE
+        binding.pbRendering.visibility = View.VISIBLE
         lifecycleScope.launch {
             val extractedText = withContext(Dispatchers.IO) {
                 try {
                     val doc = pdDocument ?: run {
                         val tempFile = File(context.cacheDir, "current_viewing.pdf")
-                        val stream = java.io.FileInputStream(tempFile)
-                        stream.use { inputStream ->
-                            if (currentPdfPassword != null) {
-                                PDDocument.load(inputStream, currentPdfPassword)
-                            } else {
-                                PDDocument.load(inputStream)
-                            }
+                        if (currentPdfPassword != null) {
+                            PDDocument.load(tempFile, currentPdfPassword)
+                        } else {
+                            PDDocument.load(tempFile)
                         }
                     }
                     val stripper = PDFTextStripper()
@@ -892,12 +795,10 @@ class ReaderFragment : Fragment() {
                 }
             }
             
-            val bindingRef = _binding ?: return@launch
-            bindingRef.pbRendering.visibility = View.GONE
-            val contextRef = _binding?.root?.context ?: return@launch
+            binding.pbRendering.visibility = View.GONE
             
             if (extractedText.isNullOrBlank()) {
-                Toast.makeText(contextRef, "No selectable text found on this page.", Toast.LENGTH_SHORT).show()
+                Toast.makeText(context, "No selectable text found on this page.", Toast.LENGTH_SHORT).show()
             } else {
                 showTextSelectionDialog(pageIndex, extractedText)
             }
@@ -952,10 +853,6 @@ class ReaderFragment : Fragment() {
     }
 
     override fun onDestroyView() {
-        pdfAdapter?.onDestroy()
-        pdfAdapter = null
-        pdfRenderer?.close()
-        pdfRenderer = null
         pdDocument?.close()
         pdDocument = null
         super.onDestroyView()

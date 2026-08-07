@@ -64,4 +64,7 @@ dependencies {
 
     // PDFBox for Android (Perfect for Lock, Unlock, Merge, Split)
     implementation("com.tom-roush:pdfbox-android:2.0.27.0")
+
+    // High performance PDF Viewer
+    implementation("com.artifex.mupdf:viewer:1.28.0a")
 }

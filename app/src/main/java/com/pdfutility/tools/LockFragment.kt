@@ -129,28 +129,23 @@ class LockFragment : Fragment() {
     private fun getFileName(context: Context, uri: Uri): String {
         var result: String? = null
         if (uri.scheme == "content") {
+            val cursor = context.contentResolver.query(uri, null, null, null, null)
             try {
-                context.contentResolver.query(uri, null, null, null, null)?.use { cursor ->
-                    if (cursor.moveToFirst()) {
-                        val index = cursor.getColumnIndex(OpenableColumns.DISPLAY_NAME)
-                        if (index >= 0) {
-                            result = cursor.getString(index)
-                        }
+                if (cursor != null && cursor.moveToFirst()) {
+                    val index = cursor.getColumnIndex(OpenableColumns.DISPLAY_NAME)
+                    if (index >= 0) {
+                        result = cursor.getString(index)
                     }
                 }
-            } catch (e: Throwable) {
-                e.printStackTrace()
+            } finally {
+                cursor?.close()
             }
         }
         if (result == null) {
-            try {
-                result = uri.path
-                val cut = result?.lastIndexOf('/') ?: -1
-                if (cut != -1) {
-                    result = result?.substring(cut + 1)
-                }
-            } catch (e: Throwable) {
-                e.printStackTrace()
+            result = uri.path
+            val cut = result?.lastIndexOf('/') ?: -1
+            if (cut != -1) {
+                result = result?.substring(cut + 1)
             }
         }
         return result ?: "document.pdf"

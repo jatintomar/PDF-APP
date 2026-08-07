@@ -90,6 +90,9 @@ class PdfListFragment : Fragment() {
             },
             onShareClicked = { pdf ->
                 sharePdf(pdf)
+            },
+            onDeleteClicked = { pdf ->
+                deletePdf(pdf)
             }
         )
         binding.rvDiscoveredPdfs.layoutManager = LinearLayoutManager(requireContext())
@@ -243,6 +246,7 @@ class PdfListFragment : Fragment() {
                             scanDirectoryRecursive(dir, list)
                         }
                     }
+                    scanDirectoryRecursive(requireContext().cacheDir, list)
                 } catch (e: Exception) {
                     e.printStackTrace()
                 }
@@ -319,6 +323,54 @@ class PdfListFragment : Fragment() {
         }
     }
 
+    private fun deletePdf(pdf: DiscoveredPdf) {
+        androidx.appcompat.app.AlertDialog.Builder(requireContext())
+            .setTitle("Delete Document")
+            .setMessage("Are you sure you want to permanently delete '${pdf.name}'? This action cannot be undone.")
+            .setPositiveButton("Delete") { _, _ ->
+                lifecycleScope.launch {
+                    val success = withContext(Dispatchers.IO) {
+                        var deleted = false
+                        // Try deleting via ContentResolver first if content uri
+                        if (pdf.uri.scheme == "content") {
+                            try {
+                                val deletedRows = requireContext().contentResolver.delete(pdf.uri, null, null)
+                                deleted = deletedRows > 0
+                            } catch (e: Exception) {
+                                e.printStackTrace()
+                            }
+                        }
+                        
+                        // Fallback to direct file deletion
+                        if (!deleted) {
+                            try {
+                                val file = if (pdf.uri.scheme == "file") {
+                                    pdf.uri.path?.let { File(it) }
+                                } else {
+                                    File(pdf.path, pdf.name)
+                                }
+                                if (file != null && file.exists() && file.isFile) {
+                                    deleted = file.delete()
+                                }
+                            } catch (e: Exception) {
+                                e.printStackTrace()
+                            }
+                        }
+                        deleted
+                    }
+                    
+                    if (success) {
+                        Toast.makeText(requireContext(), "File deleted successfully", Toast.LENGTH_SHORT).show()
+                        scanDevicePdfs()
+                    } else {
+                        Toast.makeText(requireContext(), "Failed to delete file. It may be read-only or system protected.", Toast.LENGTH_LONG).show()
+                    }
+                }
+            }
+            .setNegativeButton("Cancel", null)
+            .show()
+    }
+
     override fun onDestroyView() {
         super.onDestroyView()
         _binding = null
@@ -328,7 +380,8 @@ class PdfListFragment : Fragment() {
 private class DiscoveredPdfAdapter(
     private val list: List<DiscoveredPdf>,
     private val onItemClicked: (DiscoveredPdf) -> Unit,
-    private val onShareClicked: (DiscoveredPdf) -> Unit
+    private val onShareClicked: (DiscoveredPdf) -> Unit,
+    private val onDeleteClicked: (DiscoveredPdf) -> Unit
 ) : RecyclerView.Adapter<DiscoveredPdfAdapter.ViewHolder>() {
 
     class ViewHolder(val binding: ItemDiscoveredPdfBinding) : RecyclerView.ViewHolder(binding.root)
@@ -375,6 +428,10 @@ private class DiscoveredPdfAdapter(
 
         holder.binding.btnDiscoveredShare.setOnClickListener {
             onShareClicked(item)
+        }
+
+        holder.binding.btnDiscoveredDelete.setOnClickListener {
+            onDeleteClicked(item)
         }
     }
 
