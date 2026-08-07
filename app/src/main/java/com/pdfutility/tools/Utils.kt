@@ -7,23 +7,28 @@ import android.provider.OpenableColumns
 fun Context.getFileName(uri: Uri): String {
     var result: String? = null
     if (uri.scheme == "content") {
-        val cursor = contentResolver.query(uri, null, null, null, null)
         try {
-            if (cursor != null && cursor.moveToFirst()) {
-                val index = cursor.getColumnIndex(OpenableColumns.DISPLAY_NAME)
-                if (index >= 0) {
-                    result = cursor.getString(index)
+            contentResolver.query(uri, null, null, null, null)?.use { cursor ->
+                if (cursor.moveToFirst()) {
+                    val index = cursor.getColumnIndex(OpenableColumns.DISPLAY_NAME)
+                    if (index >= 0) {
+                        result = cursor.getString(index)
+                    }
                 }
             }
-        } finally {
-            cursor?.close()
+        } catch (e: Throwable) {
+            e.printStackTrace()
         }
     }
     if (result == null) {
-        result = uri.path
-        val cut = result?.lastIndexOf('/') ?: -1
-        if (cut != -1) {
-            result = result?.substring(cut + 1)
+        try {
+            result = uri.path
+            val cut = result?.lastIndexOf('/') ?: -1
+            if (cut != -1) {
+                result = result?.substring(cut + 1)
+            }
+        } catch (e: Throwable) {
+            e.printStackTrace()
         }
     }
     return result ?: "document"
