@@ -1,0 +1,94 @@
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="108dp"
+    android:height="108dp"
+    android:viewportWidth="108"
+    android:viewportHeight="108">
+    
+    <!-- App Icon Base Background: Premium Blue Glossy Rounded Square -->
+    <path
+        android:pathData="M24,12 H84 A12,12 0,0 1 96,24 V84 A12,12 0,0 1 84,96 H24 A12,12 0,0 1 12,24 V24 A12,12 0,0 1 24,12 Z"
+        android:fillColor="#1E3A8A"/>
+    
+    <path
+        android:pathData="M26,15 H82 A11,11 0,0 1 93,26 V82 A11,11 0,0 1 82,93 H26 A11,11 0,0 1 15,82 V26 A11,11 0,0 1 26,15 Z"
+        android:fillColor="#1D4ED8"/>
+
+    <!-- PDF Sheet Outline (White Container) -->
+    <path
+        android:pathData="M34,26 H64 L74,36 V82 C74,84.2 72.2,86 70,86 H34 C31.8,86 30,84.2 30,82 V30 C30,27.8 31.8,26 34,26 Z"
+        android:strokeColor="#FFFFFF"
+        android:strokeWidth="2.5"
+        android:fillColor="#1E3A8A"
+        android:fillAlpha="0.4"/>
+
+    <!-- Dog ear / folded corner top right -->
+    <path
+        android:pathData="M64,26 V36 H74 Z"
+        android:fillColor="#FFFFFF"/>
+
+    <!-- Bold 'PDF' label in central top area of sheet -->
+    <!-- 'P' -->
+    <path
+        android:pathData="M37,42 V49 H39 V46 H41 C42.1,46 43,45.1 43,44 V44 C43,42.9 42.1,42 41,42 H37 Z M39,44 V43.5 H41 C41.3,43.5 41.5,43.7 41.5,44 C41.5,44.3 41.3,44.5 41,44 H39 Z"
+        android:fillColor="#FFFFFF"/>
+    <!-- 'D' -->
+    <path
+        android:pathData="M46,42 V49 H49.5 C51,49 52,47.8 52,45.5 V45.5 C52,43.2 51,42 49.5,42 H46 Z M48,43.5 H49.5 C50.2,43.5 50.5,44.1 50.5,45.5 C50.5,46.9 50.2,47.5 49.5,47.5 H48 V43.5 Z"
+        android:fillColor="#FFFFFF"/>
+    <!-- 'F' -->
+    <path
+        android:pathData="M55,42 V49 H57 V46.5 H60.5 V45 H57 V43.5 H61.5 V42 H55 Z"
+        android:fillColor="#FFFFFF"/>
+
+    <!-- Divider Line between left and right splits inside the sheet -->
+    <path
+        android:pathData="M52,53 V82"
+        android:strokeColor="#FFFFFF"
+        android:strokeWidth="1.5"
+        android:strokeLineCap="round"/>
+
+    <!-- Left Split: Down Arrow & Gear -->
+    <!-- Down Arrow line and arrowhead -->
+    <path
+        android:pathData="M41,54 V64 M37.5,60.5 L41,64 L44.5,60.5"
+        android:strokeColor="#FFFFFF"
+        android:strokeWidth="2"
+        android:strokeLineCap="round"
+        android:strokeLineJoin="round"/>
+    
+    <!-- Gear center -->
+    <path
+        android:pathData="M41,74 A2.5,2.5 0,1,1 40.9,74"
+        android:strokeColor="#FFFFFF"
+        android:strokeWidth="1.5"
+        android:fillColor="#FFFFFF"/>
+    <!-- Gear outer teeth elements -->
+    <path
+        android:pathData="M41,70 V71 M41,77 V78 M37,74 H38 M44,74 H45 M38,71 L39,72 M43,76 L44,77 M38,77 L39,76 M43,71 L44,72"
+        android:strokeColor="#FFFFFF"
+        android:strokeWidth="1.5"
+        android:strokeLineCap="round"/>
+
+    <!-- Right Split: Shuffle Crossing / Briefcase -->
+    <!-- Stylized Crossing paths representing split/merge -->
+    <path
+        android:pathData="M56,56 C59,56 60,62 63,62 M56,62 C59,62 60,56 63,56 M61,54.5 L63.5,56 L61,57.5 M61,60.5 L63.5,62 L61,63.5"
+        android:strokeColor="#FFFFFF"
+        android:strokeWidth="1.5"
+        android:strokeLineCap="round"
+        android:strokeLineJoin="round"
+        android:fillColor="#00000000"/>
+
+    <!-- Briefcase / Utility Toolbox icon at bottom-right -->
+    <path
+        android:pathData="M57,71 H65 C66.1,71 67,71.9 67,73 V79 C67,80.1 66.1,81 65,81 H57 C55.9,81 55,80.1 55,79 V73 C55,71.9 55.9,71 57,71 Z"
+        android:strokeColor="#FFFFFF"
+        android:strokeWidth="1.5"
+        android:fillColor="#00000000"/>
+    <path
+        android:pathData="M59,71 V69 A1,1 0,0,1 60,68 H62 A1,1 0,0,1 63,69 V71"
+        android:strokeColor="#FFFFFF"
+        android:strokeWidth="1.5"
+        android:fillColor="#00000000"/>
+
+</vector>

@@ -1,0 +1,186 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:orientation="vertical"
+    android:padding="24dp"
+    android:background="@color/surface">
+
+    <!-- Bottom Sheet Drag Handle -->
+    <View
+        android:layout_width="32dp"
+        android:layout_height="4dp"
+        android:layout_gravity="center_horizontal"
+        android:background="@color/outline"
+        android:backgroundTint="@color/outline"
+        android:layout_marginBottom="16dp"
+        android:importantForAccessibility="no" />
+
+    <TextView
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="Advanced Options"
+        android:textSize="20sp"
+        android:textStyle="bold"
+        android:textColor="@color/on_surface"
+        android:layout_marginBottom="16dp" />
+
+    <!-- Output Format Selection -->
+    <TextView
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="Output Format"
+        android:textSize="14sp"
+        android:textStyle="bold"
+        android:textColor="@color/on_surface"
+        android:layout_marginBottom="8dp" />
+
+    <RadioGroup
+        android:id="@+id/dialog_rg_format"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        android:layout_marginBottom="16dp">
+        <com.google.android.material.radiobutton.MaterialRadioButton
+            android:id="@+id/dialog_rb_jpeg"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="JPEG"
+            android:checked="true"
+            android:layout_marginEnd="24dp" />
+        <com.google.android.material.radiobutton.MaterialRadioButton
+            android:id="@+id/dialog_rb_png"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="PNG" />
+    </RadioGroup>
+
+    <!-- Custom Dimension Scaling -->
+    <TextView
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="Target Resolution"
+        android:textSize="14sp"
+        android:textStyle="bold"
+        android:textColor="@color/on_surface"
+        android:layout_marginBottom="8dp" />
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        android:layout_marginBottom="16dp">
+
+        <com.google.android.material.textfield.TextInputLayout
+            android:layout_width="0dp"
+            android:layout_weight="1"
+            android:layout_height="wrap_content"
+            android:layout_marginEnd="8dp"
+            style="@style/Widget.Material3.TextInputLayout.OutlinedBox"
+            android:hint="Width (px)">
+            <com.google.android.material.textfield.TextInputEditText
+                android:id="@+id/dialog_et_width"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:inputType="number"
+                android:text="1024" />
+        </com.google.android.material.textfield.TextInputLayout>
+
+        <com.google.android.material.textfield.TextInputLayout
+            android:layout_width="0dp"
+            android:layout_weight="1"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="8dp"
+            style="@style/Widget.Material3.TextInputLayout.OutlinedBox"
+            android:hint="Height (px)">
+            <com.google.android.material.textfield.TextInputEditText
+                android:id="@+id/dialog_et_height"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:inputType="number"
+                android:text="1024" />
+        </com.google.android.material.textfield.TextInputLayout>
+    </LinearLayout>
+
+    <!-- Quality Slider -->
+    <TextView
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="Compression Quality"
+        android:textSize="14sp"
+        android:textStyle="bold"
+        android:textColor="@color/on_surface"
+        android:layout_marginBottom="4dp" />
+
+    <com.google.android.material.slider.Slider
+        android:id="@+id/dialog_slider_quality"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:valueFrom="10.0"
+        android:valueTo="100.0"
+        android:value="80.0"
+        android:stepSize="10.0"
+        android:layout_marginBottom="16dp" />
+
+    <!-- Rotation Choices -->
+    <TextView
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="Rotate Image"
+        android:textSize="14sp"
+        android:textStyle="bold"
+        android:textColor="@color/on_surface"
+        android:layout_marginBottom="8dp" />
+
+    <RadioGroup
+        android:id="@+id/dialog_rg_rotation"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        android:layout_marginBottom="16dp">
+        <com.google.android.material.radiobutton.MaterialRadioButton
+            android:id="@+id/dialog_rb_rot_0"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="0°"
+            android:checked="true"
+            android:layout_marginEnd="16dp" />
+        <com.google.android.material.radiobutton.MaterialRadioButton
+            android:id="@+id/dialog_rb_rot_90"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="90°"
+            android:layout_marginEnd="16dp" />
+        <com.google.android.material.radiobutton.MaterialRadioButton
+            android:id="@+id/dialog_rb_rot_180"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="180°"
+            android:layout_marginEnd="16dp" />
+        <com.google.android.material.radiobutton.MaterialRadioButton
+            android:id="@+id/dialog_rb_rot_270"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="270°" />
+    </RadioGroup>
+
+    <!-- EXIF metadata stripping -->
+    <com.google.android.material.checkbox.MaterialCheckBox
+        android:id="@+id/dialog_cb_strip_metadata"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="Strip EXIF Metadata"
+        android:checked="true"
+        android:textColor="@color/on_surface"
+        android:layout_marginBottom="24dp" />
+
+    <!-- Apply configurations button -->
+    <com.google.android.material.button.MaterialButton
+        android:id="@+id/dialog_btn_apply"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="Apply Options"
+        style="@style/Widget.Material3.Button" />
+
+</LinearLayout>

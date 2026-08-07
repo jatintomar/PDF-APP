@@ -1,0 +1,189 @@
+<?xml version="1.0" encoding="utf-8"?>
+<com.google.android.material.card.MaterialCardView xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:layout_gravity="center"
+    android:layout_margin="24dp"
+    app:cardElevation="6dp"
+    app:cardCornerRadius="16dp"
+    app:strokeWidth="1dp"
+    app:strokeColor="@color/outline"
+    android:background="@color/surface">
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="vertical"
+        android:padding="24dp">
+
+        <TextView
+            android:id="@+id/tv_stepper_title"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="Processing Images"
+            android:textSize="18sp"
+            android:textStyle="bold"
+            android:textColor="@color/on_surface"
+            android:layout_marginBottom="20dp" />
+
+        <!-- Step 1: Decoding and Loading Image -->
+        <LinearLayout
+            android:id="@+id/step_container_1"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:gravity="center_vertical"
+            android:layout_marginBottom="16dp">
+
+            <FrameLayout
+                android:layout_width="24dp"
+                android:layout_height="24dp"
+                android:layout_marginEnd="16dp">
+
+                <ProgressBar
+                    android:id="@+id/pb_step_1"
+                    android:layout_width="match_parent"
+                    android:layout_height="match_parent"
+                    style="?android:attr/progressBarStyleSmall"
+                    android:visibility="visible" />
+
+                <ImageView
+                    android:id="@+id/iv_step_1_done"
+                    android:layout_width="match_parent"
+                    android:layout_height="match_parent"
+                    android:src="@android:drawable/checkbox_on_background"
+                    android:visibility="gone"
+                    android:contentDescription="Completed" />
+            </FrameLayout>
+
+            <TextView
+                android:id="@+id/tv_step_1"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="1. Decoding and Loading Image"
+                android:textSize="14sp"
+                android:textColor="@color/on_surface" />
+        </LinearLayout>
+
+        <!-- Step 2: Applying Rotations & Crop overlays -->
+        <LinearLayout
+            android:id="@+id/step_container_2"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:gravity="center_vertical"
+            android:layout_marginBottom="16dp"
+            android:alpha="0.5">
+
+            <FrameLayout
+                android:layout_width="24dp"
+                android:layout_height="24dp"
+                android:layout_marginEnd="16dp">
+
+                <ProgressBar
+                    android:id="@+id/pb_step_2"
+                    android:layout_width="match_parent"
+                    android:layout_height="match_parent"
+                    style="?android:attr/progressBarStyleSmall"
+                    android:visibility="gone" />
+
+                <ImageView
+                    android:id="@+id/iv_step_2_done"
+                    android:layout_width="match_parent"
+                    android:layout_height="match_parent"
+                    android:src="@android:drawable/checkbox_on_background"
+                    android:visibility="gone"
+                    android:contentDescription="Completed" />
+            </FrameLayout>
+
+            <TextView
+                android:id="@+id/tv_step_2"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="2. Applying Rotations &amp; Crop"
+                android:textSize="14sp"
+                android:textColor="@color/on_surface" />
+        </LinearLayout>
+
+        <!-- Step 3: Compressing & Encoding -->
+        <LinearLayout
+            android:id="@+id/step_container_3"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:gravity="center_vertical"
+            android:layout_marginBottom="16dp"
+            android:alpha="0.5">
+
+            <FrameLayout
+                android:layout_width="24dp"
+                android:layout_height="24dp"
+                android:layout_marginEnd="16dp">
+
+                <ProgressBar
+                    android:id="@+id/pb_step_3"
+                    android:layout_width="match_parent"
+                    android:layout_height="match_parent"
+                    style="?android:attr/progressBarStyleSmall"
+                    android:visibility="gone" />
+
+                <ImageView
+                    android:id="@+id/iv_step_3_done"
+                    android:layout_width="match_parent"
+                    android:layout_height="match_parent"
+                    android:src="@android:drawable/checkbox_on_background"
+                    android:visibility="gone"
+                    android:contentDescription="Completed" />
+            </FrameLayout>
+
+            <TextView
+                android:id="@+id/tv_step_3"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="3. Compressing &amp; Formatting"
+                android:textSize="14sp"
+                android:textColor="@color/on_surface" />
+        </LinearLayout>
+
+        <!-- Step 4: Saving output to Storage (SAF) -->
+        <LinearLayout
+            android:id="@+id/step_container_4"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:gravity="center_vertical"
+            android:alpha="0.5">
+
+            <FrameLayout
+                android:layout_width="24dp"
+                android:layout_height="24dp"
+                android:layout_marginEnd="16dp">
+
+                <ProgressBar
+                    android:id="@+id/pb_step_4"
+                    android:layout_width="match_parent"
+                    android:layout_height="match_parent"
+                    style="?android:attr/progressBarStyleSmall"
+                    android:visibility="gone" />
+
+                <ImageView
+                    android:id="@+id/iv_step_4_done"
+                    android:layout_width="match_parent"
+                    android:layout_height="match_parent"
+                    android:src="@android:drawable/checkbox_on_background"
+                    android:visibility="gone"
+                    android:contentDescription="Completed" />
+            </FrameLayout>
+
+            <TextView
+                android:id="@+id/tv_step_4"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="4. Saving output to Storage"
+                android:textSize="14sp"
+                android:textColor="@color/on_surface" />
+        </LinearLayout>
+
+    </LinearLayout>
+</com.google.android.material.card.MaterialCardView>

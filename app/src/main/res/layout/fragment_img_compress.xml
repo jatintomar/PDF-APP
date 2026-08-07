@@ -1,0 +1,220 @@
+<?xml version="1.0" encoding="utf-8"?>
+<ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:fillViewport="true"
+    android:background="@color/background">
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="vertical"
+        android:padding="16dp">
+
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="Compress Image"
+            android:textSize="20sp"
+            android:textStyle="bold"
+            android:textColor="@color/on_surface"
+            android:layout_marginBottom="16dp" />
+
+        <com.google.android.material.button.MaterialButton
+            android:id="@+id/btn_select_img"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="Select Image File(s) [Multi-Select Supported]"
+            android:layout_marginBottom="16dp"
+            app:icon="@android:drawable/ic_menu_gallery" />
+
+        <TextView
+            android:id="@+id/tv_selected_img"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="No file selected"
+            android:textColor="@color/on_surface_variant"
+            android:layout_marginBottom="16dp" />
+
+        <!-- Advanced Options Summary Card -->
+        <com.google.android.material.card.MaterialCardView
+            android:id="@+id/card_settings_summary"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            app:cardCornerRadius="12dp"
+            app:strokeWidth="1dp"
+            app:strokeColor="@color/outline"
+            android:layout_marginBottom="16dp"
+            app:cardBackgroundColor="@color/surface">
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical"
+                android:padding="16dp">
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="horizontal"
+                    android:gravity="center_vertical"
+                    android:layout_marginBottom="12dp">
+
+                    <TextView
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="1"
+                        android:text="Compression Options"
+                        android:textSize="16sp"
+                        android:textStyle="bold"
+                        android:textColor="@color/on_surface" />
+
+                    <com.google.android.material.button.MaterialButton
+                        android:id="@+id/btn_compare_fidelity"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="Compare"
+                        style="@style/Widget.Material3.Button.TextButton"
+                        android:textColor="#FF16A34A"
+                        app:iconTint="#FF16A34A"
+                        android:visibility="gone"
+                        android:layout_marginEnd="4dp"
+                        app:icon="@android:drawable/ic_menu_view" />
+
+                    <com.google.android.material.button.MaterialButton
+                        android:id="@+id/btn_configure_advanced"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="Configure"
+                        style="@style/Widget.Material3.Button.TextButton"
+                        app:icon="@android:drawable/ic_menu_manage" />
+                </LinearLayout>
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="horizontal"
+                    android:weightSum="2"
+                    android:layout_marginBottom="8dp">
+
+                    <TextView
+                        android:id="@+id/tv_summary_format"
+                        android:layout_width="0dp"
+                        android:layout_weight="1"
+                        android:layout_height="wrap_content"
+                        android:text="Format: JPEG"
+                        android:textColor="@color/on_surface_variant"
+                        android:textSize="13sp" />
+
+                    <TextView
+                        android:id="@+id/tv_summary_resolution"
+                        android:layout_width="0dp"
+                        android:layout_weight="1"
+                        android:layout_height="wrap_content"
+                        android:text="Resolution: 1024 x 1024 px"
+                        android:textColor="@color/on_surface_variant"
+                        android:textSize="13sp" />
+                </LinearLayout>
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="horizontal"
+                    android:weightSum="2">
+
+                    <TextView
+                        android:id="@+id/tv_summary_quality"
+                        android:layout_width="0dp"
+                        android:layout_weight="1"
+                        android:layout_height="wrap_content"
+                        android:text="Quality: 80%"
+                        android:textColor="@color/on_surface_variant"
+                        android:textSize="13sp" />
+
+                    <TextView
+                        android:id="@+id/tv_summary_rotation"
+                        android:layout_width="0dp"
+                        android:layout_weight="1"
+                        android:layout_height="wrap_content"
+                        android:text="Rotation: 0°"
+                        android:textColor="@color/on_surface_variant"
+                        android:textSize="13sp" />
+                </LinearLayout>
+
+            </LinearLayout>
+        </com.google.android.material.card.MaterialCardView>
+
+        <!-- Cropping Option -->
+        <com.google.android.material.checkbox.MaterialCheckBox
+            android:id="@+id/cb_enable_crop"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="Enable Cropping"
+            android:textColor="@color/on_surface"
+            android:layout_marginBottom="8dp" />
+
+        <LinearLayout
+            android:id="@+id/layout_crop_inputs"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical"
+            android:visibility="gone"
+            android:layout_marginBottom="16dp">
+
+            <!-- Interactive Visual Crop Box Preview -->
+            <com.google.android.material.card.MaterialCardView
+                android:layout_width="match_parent"
+                android:layout_height="220dp"
+                app:cardCornerRadius="8dp"
+                app:strokeWidth="1dp"
+                app:strokeColor="@color/outline"
+                android:layout_marginBottom="12dp">
+
+                <FrameLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="match_parent">
+
+                    <ImageView
+                        android:id="@+id/iv_crop_preview"
+                        android:layout_width="match_parent"
+                        android:layout_height="match_parent"
+                        android:scaleType="fitCenter"
+                        android:background="#FFF1F5F9" />
+
+                    <com.pdfutility.tools.CropOverlayView
+                        android:id="@+id/crop_overlay"
+                        android:layout_width="match_parent"
+                        android:layout_height="match_parent" />
+                </FrameLayout>
+            </com.google.android.material.card.MaterialCardView>
+        </LinearLayout>
+
+        <!-- EXIF Stripping Toggle -->
+        <com.google.android.material.checkbox.MaterialCheckBox
+            android:id="@+id/cb_strip_metadata"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="Strip EXIF Metadata (Camera info, GPS location, Dates)"
+            android:checked="true"
+            android:textColor="@color/on_surface"
+            android:layout_marginBottom="12dp" />
+
+        <com.google.android.material.button.MaterialButton
+            android:id="@+id/btn_compress_img"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="Compress &amp; Save"
+            android:enabled="false"
+            app:icon="@android:drawable/ic_menu_save" />
+
+        <ProgressBar
+            android:id="@+id/progress_bar_img"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_gravity="center"
+            android:layout_marginTop="16dp"
+            android:visibility="gone" />
+
+    </LinearLayout>
+</ScrollView>

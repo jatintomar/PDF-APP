@@ -1,0 +1,14 @@
+<resources>
+    <!-- Base application theme. -->
+    <style name="Theme.PDFUtilityTools" parent="Theme.Material3.DayNight.NoActionBar">
+        <item name="colorPrimary">@color/primary</item>
+        <item name="colorPrimaryContainer">@color/primary_container</item>
+        <item name="colorOnPrimary">@color/on_primary</item>
+        <item name="android:windowBackground">@color/background</item>
+        <item name="colorSurface">@color/surface</item>
+        <item name="colorOnSurface">@color/on_surface</item>
+        <item name="colorOnSurfaceVariant">@color/on_surface_variant</item>
+        <item name="colorOutline">@color/outline</item>
+        <item name="colorError">@color/error</item>
+    </style>
+</resources>

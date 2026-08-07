@@ -1,0 +1,127 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="@color/background">
+
+    <!-- Main Content -->
+    <FrameLayout
+        android:layout_width="match_parent"
+        android:layout_height="match_parent">
+
+        <!-- No File Selected Screen -->
+        <LinearLayout
+            android:id="@+id/ll_empty_state"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical"
+            android:gravity="center"
+            android:layout_gravity="center"
+            android:padding="32dp">
+
+            <ImageView
+                android:layout_width="64dp"
+                android:layout_height="64dp"
+                android:src="@android:drawable/ic_menu_search"
+                app:tint="@color/on_surface_variant"
+                android:layout_marginBottom="16dp" />
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Open PDF from File Manager"
+                android:textSize="16sp"
+                android:textStyle="bold"
+                android:textColor="@color/on_surface"
+                android:layout_marginBottom="8dp" />
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="To read a PDF, select this app when opening a PDF file from your device file manager."
+                android:textSize="12sp"
+                android:gravity="center"
+                android:textColor="@color/on_surface_variant" />
+        </LinearLayout>
+
+        <!-- Metadata and Reader View -->
+        <RelativeLayout
+            android:id="@+id/ll_reader_content"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:visibility="gone">
+
+            <ProgressBar
+                android:id="@+id/pb_rendering"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_centerInParent="true"
+                android:elevation="8dp"
+                android:visibility="gone" />
+
+            <!-- High Performance PDF View -->
+            <com.pdfutility.tools.ZoomRecyclerView
+                android:id="@+id/pdf_recycler_view"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:scrollbars="vertical"
+                android:fadeScrollbars="false"
+                android:scrollbarSize="6dp"
+                app:fastScrollEnabled="true"
+                app:fastScrollVerticalThumbDrawable="@drawable/fastscroll_thumb"
+                app:fastScrollVerticalTrackDrawable="@drawable/fastscroll_track"
+                app:fastScrollHorizontalThumbDrawable="@drawable/fastscroll_thumb"
+                app:fastScrollHorizontalTrackDrawable="@drawable/fastscroll_track" />
+
+            <!-- Search Navigation Bar -->
+            <LinearLayout
+                android:id="@+id/ll_search_navigation"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_alignParentBottom="true"
+                android:orientation="horizontal"
+                android:background="@android:color/white"
+                android:elevation="8dp"
+                android:padding="8dp"
+                android:gravity="center_vertical"
+                android:visibility="gone">
+
+                <TextView
+                    android:id="@+id/tv_search_result"
+                    android:layout_width="0dp"
+                    android:layout_weight="1"
+                    android:layout_height="wrap_content"
+                    android:text="0 of 0"
+                    android:textStyle="bold"
+                    android:layout_marginStart="8dp"
+                    android:textColor="@android:color/black"/>
+
+                <ImageButton
+                    android:id="@+id/btn_search_prev"
+                    android:layout_width="48dp"
+                    android:layout_height="48dp"
+                    android:src="@android:drawable/ic_media_previous"
+                    android:background="?android:attr/selectableItemBackgroundBorderless"
+                    android:contentDescription="Previous" />
+
+                <ImageButton
+                    android:id="@+id/btn_search_next"
+                    android:layout_width="48dp"
+                    android:layout_height="48dp"
+                    android:src="@android:drawable/ic_media_next"
+                    android:background="?android:attr/selectableItemBackgroundBorderless"
+                    android:contentDescription="Next" />
+                    
+                <ImageButton
+                    android:id="@+id/btn_search_close"
+                    android:layout_width="48dp"
+                    android:layout_height="48dp"
+                    android:src="@android:drawable/ic_menu_close_clear_cancel"
+                    android:background="?android:attr/selectableItemBackgroundBorderless"
+                    android:contentDescription="Close search" />
+            </LinearLayout>
+
+        </RelativeLayout>
+    </FrameLayout>
+</RelativeLayout>

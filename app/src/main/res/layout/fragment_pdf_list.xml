@@ -1,0 +1,180 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="vertical"
+    android:background="@color/background"
+    android:padding="16dp">
+
+    <!-- Header Section -->
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        android:gravity="center_vertical"
+        android:layout_marginBottom="12dp">
+
+        <LinearLayout
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:orientation="vertical">
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Device PDF Discovery"
+                android:textSize="22sp"
+                android:textStyle="bold"
+                android:textColor="@color/on_surface" />
+
+            <TextView
+                android:id="@+id/tv_pdf_found_count"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Scanning local storage..."
+                android:textSize="13sp"
+                android:textColor="@color/on_surface_variant" />
+        </LinearLayout>
+
+        <ImageButton
+            android:id="@+id/btn_refresh_pdfs"
+            android:layout_width="40dp"
+            android:layout_height="40dp"
+            android:background="?attr/selectableItemBackgroundBorderless"
+            android:src="@android:drawable/ic_popup_sync"
+            android:contentDescription="Refresh PDF files"
+            app:tint="@color/primary" />
+    </LinearLayout>
+
+    <!-- Search Bar -->
+    <com.google.android.material.textfield.TextInputLayout
+        android:id="@+id/til_search_pdfs"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:hint="Search PDFs by name..."
+        style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox"
+        app:startIconDrawable="@android:drawable/ic_menu_search"
+        app:startIconTint="@color/on_surface_variant"
+        android:layout_marginBottom="16dp"
+        app:boxCornerRadiusTopStart="12dp"
+        app:boxCornerRadiusTopEnd="12dp"
+        app:boxCornerRadiusBottomStart="12dp"
+        app:boxCornerRadiusBottomEnd="12dp">
+
+        <com.google.android.material.textfield.TextInputEditText
+            android:id="@+id/et_search_pdfs"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:inputType="text"
+            android:maxLines="1" />
+    </com.google.android.material.textfield.TextInputLayout>
+
+    <!-- Content Area -->
+    <FrameLayout
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:layout_weight="1">
+
+        <!-- RecyclerView List of PDFs -->
+        <androidx.swiperefreshlayout.widget.SwipeRefreshLayout
+            android:id="@+id/swipe_refresh_pdfs"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent">
+
+            <androidx.recyclerview.widget.RecyclerView
+                android:id="@+id/rv_discovered_pdfs"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:clipToPadding="false"
+                android:paddingBottom="80dp" />
+        </androidx.swiperefreshlayout.widget.SwipeRefreshLayout>
+
+        <!-- Permission Overlay Screen -->
+        <LinearLayout
+            android:id="@+id/ll_permission_overlay"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:orientation="vertical"
+            android:gravity="center"
+            android:padding="24dp"
+            android:background="@color/background"
+            android:visibility="gone">
+
+            <ImageView
+                android:layout_width="72dp"
+                android:layout_height="72dp"
+                android:src="@android:drawable/ic_menu_search"
+                app:tint="@color/primary"
+                android:layout_marginBottom="16dp" />
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Storage Access Required"
+                android:textSize="18sp"
+                android:textStyle="bold"
+                android:textColor="@color/on_surface"
+                android:layout_marginBottom="8dp" />
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="To automatically detect PDFs on your phone and open them instantly, this app requires storage read permission."
+                android:textSize="14sp"
+                android:textColor="@color/on_surface_variant"
+                android:gravity="center"
+                android:layout_marginBottom="24dp" />
+
+            <Button
+                android:id="@+id/btn_grant_permission"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Grant Access" />
+        </LinearLayout>
+
+        <!-- Empty State Screen -->
+        <LinearLayout
+            android:id="@+id/ll_empty_discovered"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:orientation="vertical"
+            android:gravity="center"
+            android:padding="24dp"
+            android:visibility="gone">
+
+            <ImageView
+                android:layout_width="64dp"
+                android:layout_height="64dp"
+                android:src="@android:drawable/ic_menu_gallery"
+                app:tint="@color/on_surface_variant"
+                android:layout_marginBottom="16dp" />
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="No PDF Documents Found"
+                android:textSize="16sp"
+                android:textStyle="bold"
+                android:textColor="@color/on_surface"
+                android:layout_marginBottom="8dp" />
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="We couldn't scan any PDF files on your device. Ensure you have PDFs stored or try scanning again."
+                android:textSize="12sp"
+                android:textColor="@color/on_surface_variant"
+                android:gravity="center" />
+        </LinearLayout>
+
+        <!-- Loading State Spinner -->
+        <ProgressBar
+            android:id="@+id/pb_scanning_pdfs"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_gravity="center"
+            android:visibility="gone" />
+    </FrameLayout>
+</LinearLayout>

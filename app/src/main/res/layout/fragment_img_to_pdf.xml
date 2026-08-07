@@ -1,0 +1,99 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="vertical"
+    android:padding="24dp">
+
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="@string/img_to_pdf"
+        android:textSize="24sp"
+        android:textStyle="bold"
+        android:textColor="@color/on_surface"
+        android:layout_marginBottom="8dp" />
+
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Select PNG/JPEG images and compile them into a single PDF document."
+        android:textSize="14sp"
+        android:textColor="@color/on_surface_variant"
+        android:layout_marginBottom="20dp" />
+
+    <com.google.android.material.card.MaterialCardView
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        app:cardCornerRadius="12dp"
+        app:strokeColor="@color/outline"
+        app:strokeWidth="1dp"
+        android:layout_marginBottom="16dp"
+        app:cardBackgroundColor="@color/surface">
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical"
+            android:padding="20dp"
+            android:gravity="center">
+
+            <Button
+                android:id="@+id/btn_select_images"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Select Images"
+                app:icon="@android:drawable/ic_menu_gallery" />
+
+            <TextView
+                android:id="@+id/tv_selected_images_count"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="No images selected"
+                android:textColor="@color/on_surface_variant"
+                android:textSize="14sp"
+                android:layout_marginTop="12dp"
+                android:textAlignment="center" />
+        </LinearLayout>
+    </com.google.android.material.card.MaterialCardView>
+
+    <CheckBox
+        android:id="@+id/cb_fit_to_page"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="Fit images to standard A4 size"
+        android:checked="true"
+        android:textSize="14sp"
+        android:layout_marginBottom="24dp" />
+
+    <Button
+        android:id="@+id/btn_convert_action"
+        android:layout_width="match_parent"
+        android:layout_height="56dp"
+        android:text="@string/img_to_pdf_action"
+        android:textSize="16sp"
+        android:enabled="false"
+        android:layout_marginBottom="16dp" />
+
+    <LinearLayout
+        android:id="@+id/progress_container"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="vertical"
+        android:gravity="center"
+        android:visibility="gone">
+
+        <ProgressBar
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginBottom="8dp" />
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="@string/processing"
+            android:textColor="@color/on_surface_variant" />
+    </LinearLayout>
+
+</LinearLayout>

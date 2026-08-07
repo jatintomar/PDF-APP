@@ -1,0 +1,20 @@
+<resources>
+    <string name="app_name">PDF Utility Tools</string>
+    <string name="lock_pdf">Lock PDF</string>
+    <string name="unlock_pdf">Unlock PDF</string>
+    <string name="merge_pdf">Merge PDFs</string>
+    <string name="split_pdf">Split PDF</string>
+    <string name="img_to_pdf">Image to PDF</string>
+    <string name="pdf_to_img">PDF to Image</string>
+    <string name="pdf_reader">PDF Reader</string>
+    <string name="select_pdf">Select PDF File</string>
+    <string name="select_multiple_pdfs">Select PDF Files</string>
+    <string name="enter_password">Enter Password</string>
+    <string name="lock_action">Encrypt &amp; Lock</string>
+    <string name="unlock_action">Decrypt &amp; Unlock</string>
+    <string name="merge_action">Merge Selected Files</string>
+    <string name="split_action">Extract Pages</string>
+    <string name="img_to_pdf_action">Convert Images to PDF</string>
+    <string name="pdf_to_img_action">Convert PDF to PNGs</string>
+    <string name="processing">Processing, please wait...</string>
+</resources>

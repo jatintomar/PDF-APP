@@ -1,0 +1,52 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:orientation="vertical"
+    android:gravity="center"
+    android:padding="6dp">
+
+    <com.google.android.material.card.MaterialCardView
+        android:id="@+id/card_thumbnail_container"
+        android:layout_width="90dp"
+        android:layout_height="120dp"
+        app:cardCornerRadius="8dp"
+        app:strokeWidth="2dp"
+        app:strokeColor="@color/outline"
+        app:cardBackgroundColor="@color/surface">
+
+        <RelativeLayout
+            android:layout_width="match_parent"
+            android:layout_height="match_parent">
+
+            <ImageView
+                android:id="@+id/iv_split_page_thumb"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:scaleType="fitCenter"
+                android:background="#FFF8FAFC" />
+
+            <!-- Custom circular selection indicator badge -->
+            <ImageView
+                android:id="@+id/iv_selection_indicator"
+                android:layout_width="24dp"
+                android:layout_height="24dp"
+                android:layout_alignParentTop="true"
+                android:layout_alignParentEnd="true"
+                android:layout_margin="6dp"
+                android:src="@android:drawable/checkbox_off_background"
+                app:tint="@color/primary" />
+        </RelativeLayout>
+    </com.google.android.material.card.MaterialCardView>
+
+    <TextView
+        android:id="@+id/tv_split_page_num"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Page 1"
+        android:textSize="11sp"
+        android:textStyle="bold"
+        android:textColor="@color/on_surface"
+        android:layout_marginTop="4dp" />
+</LinearLayout>

@@ -1,0 +1,116 @@
+<?xml version="1.0" encoding="utf-8"?>
+<com.google.android.material.card.MaterialCardView xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:id="@+id/card_recent_item"
+    android:layout_width="220dp"
+    android:layout_height="wrap_content"
+    android:layout_marginEnd="12dp"
+    android:layout_marginVertical="6dp"
+    app:cardCornerRadius="12dp"
+    app:cardElevation="2dp"
+    app:cardBackgroundColor="@color/surface"
+    app:strokeColor="@color/outline"
+    app:strokeWidth="1dp"
+    android:clickable="true"
+    android:focusable="true">
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="vertical"
+        android:padding="12dp">
+
+        <!-- Top Header Line (Icon + Tool Tag) -->
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:gravity="center_vertical"
+            android:layout_marginBottom="8dp">
+
+            <ImageView
+                android:id="@+id/iv_recent_icon"
+                android:layout_width="16dp"
+                android:layout_height="16dp"
+                android:src="@android:drawable/ic_menu_save"
+                app:tint="@color/primary"
+                android:layout_marginEnd="6dp" />
+
+            <TextView
+                android:id="@+id/tv_recent_tool"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Compress PDF"
+                android:textSize="10sp"
+                android:textColor="@color/primary"
+                android:textStyle="bold" />
+        </LinearLayout>
+
+        <!-- File Name -->
+        <TextView
+            android:id="@+id/tv_recent_name"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="Quarterly_Report_2026.pdf"
+            android:textSize="13sp"
+            android:textStyle="bold"
+            android:textColor="@color/on_surface"
+            android:maxLines="1"
+            android:ellipsize="end"
+            android:layout_marginBottom="4dp" />
+
+        <!-- Savings Badge/Text -->
+        <TextView
+            android:id="@+id/tv_recent_savings"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Saved: 8.27 MB"
+            android:textSize="11sp"
+            android:textColor="#FF16A34A"
+            android:textStyle="bold"
+            android:layout_marginBottom="8dp" />
+
+        <!-- Divider -->
+        <View
+            android:layout_width="match_parent"
+            android:layout_height="1dp"
+            android:background="@color/outline"
+            android:layout_marginBottom="8dp" />
+
+        <!-- Compact Interactive Actions -->
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:gravity="center_vertical">
+
+            <Button
+                android:id="@+id/btn_recent_view"
+                android:layout_width="0dp"
+                android:layout_height="32dp"
+                android:layout_weight="1"
+                android:text="View"
+                android:textSize="10sp"
+                style="@style/Widget.MaterialComponents.Button.TextButton"
+                android:padding="0dp" />
+
+            <ImageButton
+                android:id="@+id/btn_recent_share"
+                android:layout_width="32dp"
+                android:layout_height="32dp"
+                android:background="?attr/selectableItemBackgroundBorderless"
+                android:src="@android:drawable/ic_menu_share"
+                app:tint="@color/on_surface_variant"
+                android:contentDescription="Share file" />
+
+            <ImageButton
+                android:id="@+id/btn_recent_delete"
+                android:layout_width="32dp"
+                android:layout_height="32dp"
+                android:background="?attr/selectableItemBackgroundBorderless"
+                android:src="@android:drawable/ic_menu_delete"
+                app:tint="@color/on_surface_variant"
+                android:contentDescription="Delete record" />
+        </LinearLayout>
+    </LinearLayout>
+</com.google.android.material.card.MaterialCardView>

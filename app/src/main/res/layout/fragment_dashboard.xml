@@ -1,0 +1,565 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.coordinatorlayout.widget.CoordinatorLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="@color/background">
+
+    <androidx.core.widget.NestedScrollView
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:fillViewport="true">
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical"
+            android:padding="20dp">
+
+            <!-- Title Header -->
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Workspace"
+                android:textSize="26sp"
+                android:textStyle="bold"
+                android:textColor="@color/on_surface"
+                android:layout_marginBottom="2dp" />
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Offline, fast, and completely secure processing"
+                android:textSize="13sp"
+                android:textColor="@color/on_surface_variant"
+                android:layout_marginBottom="16dp" />
+
+            <!-- RECENT HISTORY CAROUSEL SECTION -->
+            <LinearLayout
+                android:id="@+id/ll_recent_carousel_container"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical"
+                android:layout_marginBottom="20dp"
+                android:visibility="visible">
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="Recent File Activity"
+                    android:textSize="15sp"
+                    android:textStyle="bold"
+                    android:textColor="@color/on_surface"
+                    android:layout_marginBottom="8dp" />
+
+                <androidx.recyclerview.widget.RecyclerView
+                    android:id="@+id/rv_recent_carousel"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="horizontal"
+                    android:clipToPadding="false" />
+            </LinearLayout>
+
+            <!-- DEVICE PDF DISCOVERY CALLOUT CARD -->
+            <com.google.android.material.card.MaterialCardView
+                android:id="@+id/card_pdf_discovery_banner"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                app:cardCornerRadius="16dp"
+                app:cardElevation="3dp"
+                app:cardBackgroundColor="#FFF0FDF4"
+                app:strokeColor="#FFDCFCE7"
+                app:strokeWidth="1.5dp"
+                android:clickable="true"
+                android:focusable="true"
+                android:layout_marginBottom="24dp">
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="horizontal"
+                    android:padding="16dp"
+                    android:gravity="center_vertical">
+
+                    <ImageView
+                        android:layout_width="40dp"
+                        android:layout_height="40dp"
+                        android:src="@android:drawable/ic_menu_search"
+                        app:tint="#FF16A34A"
+                        android:layout_marginEnd="12dp" />
+
+                    <LinearLayout
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="1"
+                        android:orientation="vertical">
+
+                        <TextView
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="Device PDF Discovery"
+                            android:textSize="14sp"
+                            android:textStyle="bold"
+                            android:textColor="#FF14532D" />
+
+                        <TextView
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="Scan phone storage &amp; open any PDF instantly"
+                            android:textSize="11sp"
+                            android:textColor="#FF166534" />
+                    </LinearLayout>
+
+                    <ImageView
+                        android:layout_width="20dp"
+                        android:layout_height="20dp"
+                        android:src="@android:drawable/ic_media_play"
+                        app:tint="#FF16A34A" />
+                </LinearLayout>
+            </com.google.android.material.card.MaterialCardView>
+
+            <!-- TOOLS GRID TITLE -->
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="All PDF Utilities"
+                android:textSize="15sp"
+                android:textStyle="bold"
+                android:textColor="@color/on_surface"
+                android:layout_marginBottom="8dp" />
+
+            <!-- Core Tools Grid -->
+            <GridLayout
+                android:id="@+id/gl_tools"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:columnCount="2"
+                android:alignmentMode="alignMargins"
+                android:columnOrderPreserved="false"
+                android:layout_marginBottom="80dp">
+
+                <!-- Lock PDF -->
+                <com.google.android.material.card.MaterialCardView
+                    android:id="@+id/card_lock"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_columnWeight="1"
+                    android:layout_margin="5dp"
+                    app:cardCornerRadius="12dp"
+                    app:cardElevation="1dp"
+                    app:cardBackgroundColor="@color/surface"
+                    app:strokeColor="@color/outline"
+                    app:strokeWidth="1dp"
+                    android:clickable="true"
+                    android:focusable="true">
+                    <LinearLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:orientation="vertical"
+                        android:padding="16dp"
+                        android:gravity="center">
+                        <ImageView
+                            android:layout_width="32dp"
+                            android:layout_height="32dp"
+                            android:src="@android:drawable/ic_secure"
+                            app:tint="@color/primary"
+                            android:layout_marginBottom="8dp" />
+                        <TextView
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="@string/lock_pdf"
+                            android:textStyle="bold"
+                            android:textSize="13sp"
+                            android:textColor="@color/on_surface" />
+                        <TextView
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="Encrypt file"
+                            android:textSize="9sp"
+                            android:textColor="@color/on_surface_variant" />
+                    </LinearLayout>
+                </com.google.android.material.card.MaterialCardView>
+
+                <!-- Unlock PDF -->
+                <com.google.android.material.card.MaterialCardView
+                    android:id="@+id/card_unlock"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_columnWeight="1"
+                    android:layout_margin="5dp"
+                    app:cardCornerRadius="12dp"
+                    app:cardElevation="1dp"
+                    app:cardBackgroundColor="@color/surface"
+                    app:strokeColor="@color/outline"
+                    app:strokeWidth="1dp"
+                    android:clickable="true"
+                    android:focusable="true">
+                    <LinearLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:orientation="vertical"
+                        android:padding="16dp"
+                        android:gravity="center">
+                        <ImageView
+                            android:layout_width="32dp"
+                            android:layout_height="32dp"
+                            android:src="@android:drawable/ic_partial_secure"
+                            app:tint="@color/primary"
+                            android:layout_marginBottom="8dp" />
+                        <TextView
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="@string/unlock_pdf"
+                            android:textStyle="bold"
+                            android:textSize="13sp"
+                            android:textColor="@color/on_surface" />
+                        <TextView
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="Remove security"
+                            android:textSize="9sp"
+                            android:textColor="@color/on_surface_variant" />
+                    </LinearLayout>
+                </com.google.android.material.card.MaterialCardView>
+
+                <!-- Merge PDF -->
+                <com.google.android.material.card.MaterialCardView
+                    android:id="@+id/card_merge"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_columnWeight="1"
+                    android:layout_margin="5dp"
+                    app:cardCornerRadius="12dp"
+                    app:cardElevation="1dp"
+                    app:cardBackgroundColor="@color/surface"
+                    app:strokeColor="@color/outline"
+                    app:strokeWidth="1dp"
+                    android:clickable="true"
+                    android:focusable="true">
+                    <LinearLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:orientation="vertical"
+                        android:padding="16dp"
+                        android:gravity="center">
+                        <ImageView
+                            android:layout_width="32dp"
+                            android:layout_height="32dp"
+                            android:src="@android:drawable/ic_menu_add"
+                            app:tint="@color/primary"
+                            android:layout_marginBottom="8dp" />
+                        <TextView
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="@string/merge_pdf"
+                            android:textStyle="bold"
+                            android:textSize="13sp"
+                            android:textColor="@color/on_surface" />
+                        <TextView
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="Join multiple"
+                            android:textSize="9sp"
+                            android:textColor="@color/on_surface_variant" />
+                    </LinearLayout>
+                </com.google.android.material.card.MaterialCardView>
+
+                <!-- Split PDF -->
+                <com.google.android.material.card.MaterialCardView
+                    android:id="@+id/card_split"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_columnWeight="1"
+                    android:layout_margin="5dp"
+                    app:cardCornerRadius="12dp"
+                    app:cardElevation="1dp"
+                    app:cardBackgroundColor="@color/surface"
+                    app:strokeColor="@color/outline"
+                    app:strokeWidth="1dp"
+                    android:clickable="true"
+                    android:focusable="true">
+                    <LinearLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:orientation="vertical"
+                        android:padding="16dp"
+                        android:gravity="center">
+                        <ImageView
+                            android:layout_width="32dp"
+                            android:layout_height="32dp"
+                            android:src="@android:drawable/ic_menu_crop"
+                            app:tint="@color/primary"
+                            android:layout_marginBottom="8dp" />
+                        <TextView
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="@string/split_pdf"
+                            android:textStyle="bold"
+                            android:textSize="13sp"
+                            android:textColor="@color/on_surface" />
+                        <TextView
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="Extract pages"
+                            android:textSize="9sp"
+                            android:textColor="@color/on_surface_variant" />
+                    </LinearLayout>
+                </com.google.android.material.card.MaterialCardView>
+
+                <!-- Image to PDF -->
+                <com.google.android.material.card.MaterialCardView
+                    android:id="@+id/card_img_to_pdf"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_columnWeight="1"
+                    android:layout_margin="5dp"
+                    app:cardCornerRadius="12dp"
+                    app:cardElevation="1dp"
+                    app:cardBackgroundColor="@color/surface"
+                    app:strokeColor="@color/outline"
+                    app:strokeWidth="1dp"
+                    android:clickable="true"
+                    android:focusable="true">
+                    <LinearLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:orientation="vertical"
+                        android:padding="16dp"
+                        android:gravity="center">
+                        <ImageView
+                            android:layout_width="32dp"
+                            android:layout_height="32dp"
+                            android:src="@android:drawable/ic_menu_gallery"
+                            app:tint="@color/primary"
+                            android:layout_marginBottom="8dp" />
+                        <TextView
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="@string/img_to_pdf"
+                            android:textStyle="bold"
+                            android:textSize="13sp"
+                            android:textColor="@color/on_surface" />
+                        <TextView
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="Compile photos"
+                            android:textSize="9sp"
+                            android:textColor="@color/on_surface_variant" />
+                    </LinearLayout>
+                </com.google.android.material.card.MaterialCardView>
+
+                <!-- PDF to Image -->
+                <com.google.android.material.card.MaterialCardView
+                    android:id="@+id/card_pdf_to_img"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_columnWeight="1"
+                    android:layout_margin="5dp"
+                    app:cardCornerRadius="12dp"
+                    app:cardElevation="1dp"
+                    app:cardBackgroundColor="@color/surface"
+                    app:strokeColor="@color/outline"
+                    app:strokeWidth="1dp"
+                    android:clickable="true"
+                    android:focusable="true">
+                    <LinearLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:orientation="vertical"
+                        android:padding="16dp"
+                        android:gravity="center">
+                        <ImageView
+                            android:layout_width="32dp"
+                            android:layout_height="32dp"
+                            android:src="@android:drawable/ic_menu_slideshow"
+                            app:tint="@color/primary"
+                            android:layout_marginBottom="8dp" />
+                        <TextView
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="@string/pdf_to_img"
+                            android:textStyle="bold"
+                            android:textSize="13sp"
+                            android:textColor="@color/on_surface" />
+                        <TextView
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="Convert to photos"
+                            android:textSize="9sp"
+                            android:textColor="@color/on_surface_variant" />
+                    </LinearLayout>
+                </com.google.android.material.card.MaterialCardView>
+
+                <!-- PDF Compress -->
+                <com.google.android.material.card.MaterialCardView
+                    android:id="@+id/card_pdf_compress"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_columnWeight="1"
+                    android:layout_margin="5dp"
+                    app:cardCornerRadius="12dp"
+                    app:cardElevation="1dp"
+                    app:cardBackgroundColor="@color/surface"
+                    app:strokeColor="@color/outline"
+                    app:strokeWidth="1dp"
+                    android:clickable="true"
+                    android:focusable="true">
+                    <LinearLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:orientation="vertical"
+                        android:padding="16dp"
+                        android:gravity="center">
+                        <ImageView
+                            android:layout_width="32dp"
+                            android:layout_height="32dp"
+                            android:src="@android:drawable/ic_menu_sort_by_size"
+                            app:tint="@color/primary"
+                            android:layout_marginBottom="8dp" />
+                        <TextView
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="Compress PDF"
+                            android:textStyle="bold"
+                            android:textSize="13sp"
+                            android:textColor="@color/on_surface" />
+                        <TextView
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="Reduce size"
+                            android:textSize="9sp"
+                            android:textColor="@color/on_surface_variant" />
+                    </LinearLayout>
+                </com.google.android.material.card.MaterialCardView>
+
+                <!-- Image Compress -->
+                <com.google.android.material.card.MaterialCardView
+                    android:id="@+id/card_img_compress"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_columnWeight="1"
+                    android:layout_margin="5dp"
+                    app:cardCornerRadius="12dp"
+                    app:cardElevation="1dp"
+                    app:cardBackgroundColor="@color/surface"
+                    app:strokeColor="@color/outline"
+                    app:strokeWidth="1dp"
+                    android:clickable="true"
+                    android:focusable="true">
+                    <LinearLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:orientation="vertical"
+                        android:padding="16dp"
+                        android:gravity="center">
+                        <ImageView
+                            android:layout_width="32dp"
+                            android:layout_height="32dp"
+                            android:src="@android:drawable/ic_menu_gallery"
+                            app:tint="@color/primary"
+                            android:layout_marginBottom="8dp" />
+                        <TextView
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="Compress Image"
+                            android:textStyle="bold"
+                            android:textSize="13sp"
+                            android:textColor="@color/on_surface" />
+                        <TextView
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="Quality scaler"
+                            android:textSize="9sp"
+                            android:textColor="@color/on_surface_variant" />
+                    </LinearLayout>
+                </com.google.android.material.card.MaterialCardView>
+            </GridLayout>
+        </LinearLayout>
+    </androidx.core.widget.NestedScrollView>
+
+    <!-- QUICK ACTIONS FLOATING MENUS -->
+    <LinearLayout
+        android:id="@+id/ll_quick_actions_menu"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:orientation="vertical"
+        android:gravity="end"
+        android:layout_gravity="bottom|end"
+        android:layout_margin="16dp"
+        android:elevation="6dp"
+        android:visibility="gone">
+
+        <!-- Quick Compress Image Button -->
+        <LinearLayout
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:gravity="center_vertical"
+            android:layout_marginBottom="12dp">
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Quick Compress Image"
+                android:textSize="12sp"
+                android:textStyle="bold"
+                android:textColor="@color/on_surface"
+                android:background="@android:drawable/dialog_holo_light_frame"
+                android:backgroundTint="#FFFFFFFF"
+                android:paddingHorizontal="10dp"
+                android:paddingVertical="4dp"
+                android:layout_marginEnd="8dp" />
+            <com.google.android.material.floatingactionbutton.FloatingActionButton
+                android:id="@+id/fab_quick_compress_image"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                app:fabSize="mini"
+                android:src="@android:drawable/ic_menu_gallery"
+                app:tint="@color/on_primary"
+                app:backgroundTint="@color/primary"
+                android:contentDescription="Quick Compress Image" />
+        </LinearLayout>
+
+        <!-- Quick Compress PDF Button -->
+        <LinearLayout
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:gravity="center_vertical"
+            android:layout_marginBottom="12dp">
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Quick Compress PDF"
+                android:textSize="12sp"
+                android:textStyle="bold"
+                android:textColor="@color/on_surface"
+                android:background="@android:drawable/dialog_holo_light_frame"
+                android:backgroundTint="#FFFFFFFF"
+                android:paddingHorizontal="10dp"
+                android:paddingVertical="4dp"
+                android:layout_marginEnd="8dp" />
+            <com.google.android.material.floatingactionbutton.FloatingActionButton
+                android:id="@+id/fab_quick_compress_pdf"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                app:fabSize="mini"
+                android:src="@android:drawable/ic_menu_sort_by_size"
+                app:tint="@color/on_primary"
+                app:backgroundTint="@color/primary"
+                android:contentDescription="Quick Compress PDF" />
+        </LinearLayout>
+    </LinearLayout>
+
+    <!-- Master floating Action Button to trigger Quick Action Widgets -->
+    <com.google.android.material.floatingactionbutton.FloatingActionButton
+        android:id="@+id/fab_master_quick_action"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_gravity="bottom|end"
+        android:layout_margin="16dp"
+        android:src="@android:drawable/ic_input_add"
+        app:tint="@color/on_primary"
+        app:backgroundTint="@color/primary"
+        android:contentDescription="Quick actions menu" />
+
+</androidx.coordinatorlayout.widget.CoordinatorLayout>
