@@ -2,8 +2,10 @@ package com.pdfutility.tools
 
 import android.content.Context
 import android.graphics.RectF
+import android.graphics.pdf.PdfRenderer
 import android.net.Uri
 import android.os.Bundle
+import android.os.ParcelFileDescriptor
 import android.provider.OpenableColumns
 import android.view.LayoutInflater
 import android.view.View
@@ -14,7 +16,6 @@ import androidx.fragment.app.Fragment
 import androidx.lifecycle.lifecycleScope
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
-import com.artifex.mupdf.viewer.MuPDFCore
 import com.pdfutility.tools.databinding.FragmentReaderBinding
 import com.tom_roush.pdfbox.pdmodel.PDDocument
 import com.tom_roush.pdfbox.text.PDFTextStripper
@@ -38,11 +39,13 @@ class ReaderFragment : Fragment() {
     private var totalPages = 0
     private var currentPage = 0
     
-    private var core: MuPDFCore? = null
+    private var pdfRenderer: PdfRenderer? = null
+    private var parcelFileDescriptor: ParcelFileDescriptor? = null
     private var pdfAdapter: PdfViewerAdapter? = null
     private var currentSearchQuery: String? = null
     
     private var pdDocument: PDDocument? = null
+    private var decryptedFile: File? = null
 
     private val saveUnlockedLauncher = registerForActivityResult(ActivityResultContracts.CreateDocument("application/pdf")) { uri ->
         if (uri != null) {
@@ -85,7 +88,7 @@ class ReaderFragment : Fragment() {
         
         setupMenu()
         
-                binding.btnSearchPrev.setOnClickListener {
+        binding.btnSearchPrev.setOnClickListener {
             if (searchResults.isNotEmpty()) {
                 currentSearchIndex = (currentSearchIndex - 1 + searchResults.size) % searchResults.size
                 pdfAdapter?.setSearchQuery(currentSearchQuery, searchResults[currentSearchIndex])
@@ -235,21 +238,67 @@ class ReaderFragment : Fragment() {
             }
 
             if (copySuccess) {
-                try {
-                    core = MuPDFCore(tempFile.readBytes(), "pdf")
-                    
-                    if (core!!.needsPassword()) {
-                        if (password != null && core!!.authenticatePassword(password)) {
-                            // Password accepted
-                        } else {
-                            binding.pbRendering.visibility = View.GONE
-                            showPasswordPrompt(uri)
-                            return@launch
+                // 1. Check if encrypted and decrypt if necessary
+                var isEncrypted = false
+                withContext(Dispatchers.IO) {
+                    try {
+                        PDDocument.load(tempFile).use { doc ->
+                            isEncrypted = doc.isEncrypted
                         }
+                    } catch (e: Exception) {
+                        isEncrypted = true
                     }
+                }
+
+                if (isEncrypted && password == null) {
+                    binding.pbRendering.visibility = View.GONE
+                    showPasswordPrompt(uri)
+                    return@launch
+                }
+
+                val decryptedFileLocal = File(context.cacheDir, "decrypted_view.pdf")
+                val decryptionSuccess = withContext(Dispatchers.IO) {
+                    try {
+                        val doc = if (password != null) {
+                            PDDocument.load(tempFile, password)
+                        } else {
+                            PDDocument.load(tempFile)
+                        }
+                        doc.use { d ->
+                            d.setAllSecurityToBeRemoved(true)
+                            decryptedFileLocal.outputStream().use { out ->
+                                d.save(out)
+                            }
+                        }
+                        true
+                    } catch (e: Exception) {
+                        e.printStackTrace()
+                        false
+                    }
+                }
+
+                if (!decryptionSuccess) {
+                    binding.pbRendering.visibility = View.GONE
+                    if (isEncrypted) {
+                        Toast.makeText(context, "Incorrect password", Toast.LENGTH_SHORT).show()
+                        showPasswordPrompt(uri)
+                    } else {
+                        showEmptyState("Failed to decrypt or read PDF.")
+                    }
+                    return@launch
+                }
+
+                currentPdfPassword = password
+                decryptedFile = decryptedFileLocal
+
+                try {
+                    parcelFileDescriptor?.close()
+                    parcelFileDescriptor = ParcelFileDescriptor.open(decryptedFileLocal, ParcelFileDescriptor.MODE_READ_ONLY)
+                    val renderer = PdfRenderer(parcelFileDescriptor!!)
+                    pdfRenderer = renderer
                     
                     val metrics = resources.displayMetrics
-                    pdfAdapter = PdfViewerAdapter(context, core!!, metrics.widthPixels,
+                    pdfAdapter = PdfViewerAdapter(context, renderer, metrics.widthPixels,
                         onPageClick = { pageIndex, x, y, viewWidth, viewHeight ->
                             handlePageClick(pageIndex, x, y, viewWidth, viewHeight)
                         },
@@ -260,7 +309,7 @@ class ReaderFragment : Fragment() {
                     binding.pdfRecyclerView.adapter = pdfAdapter
                     
                     binding.pbRendering.visibility = View.GONE
-                    totalPages = core!!.countPages()
+                    totalPages = renderer.pageCount
                     
                     val savedPage = getSavedPage(uri)
                     val savedScale = getSavedScale(uri)
@@ -281,11 +330,7 @@ class ReaderFragment : Fragment() {
 
                     withContext(Dispatchers.IO) {
                         try {
-                            pdDocument = if (password != null) {
-                                PDDocument.load(tempFile, password)
-                            } else {
-                                PDDocument.load(tempFile)
-                            }
+                            pdDocument = PDDocument.load(decryptedFileLocal)
                         } catch (e: Exception) {
                             e.printStackTrace()
                         }
@@ -340,9 +385,13 @@ class ReaderFragment : Fragment() {
 
             if (success) {
                 try {
-                    core = MuPDFCore(tempFile.readBytes(), "pdf")
+                    parcelFileDescriptor?.close()
+                    parcelFileDescriptor = ParcelFileDescriptor.open(tempFile, ParcelFileDescriptor.MODE_READ_ONLY)
+                    val renderer = PdfRenderer(parcelFileDescriptor!!)
+                    pdfRenderer = renderer
+
                     val metrics = resources.displayMetrics
-                    pdfAdapter = PdfViewerAdapter(context, core!!, metrics.widthPixels,
+                    pdfAdapter = PdfViewerAdapter(context, renderer, metrics.widthPixels,
                         onPageClick = { pageIndex, x, y, viewWidth, viewHeight ->
                             handlePageClick(pageIndex, x, y, viewWidth, viewHeight)
                         },
@@ -353,7 +402,7 @@ class ReaderFragment : Fragment() {
                     binding.pdfRecyclerView.adapter = pdfAdapter
                     binding.pbRendering.visibility = View.GONE
                     
-                    totalPages = core!!.countPages()
+                    totalPages = renderer.pageCount
                     
                     val savedPage = getSavedPage(uri)
                     val savedScale = getSavedScale(uri)
@@ -401,10 +450,32 @@ class ReaderFragment : Fragment() {
         lifecycleScope.launch {
             val matches = withContext(Dispatchers.IO) {
                 val results = mutableListOf<Int>()
-                for (i in 0 until totalPages) {
-                    val boxes = core?.searchPage(i, query)
-                    if (boxes != null && boxes.isNotEmpty()) {
-                        results.add(i)
+                val doc = pdDocument ?: try {
+                    val context = requireContext()
+                    val tempFile = File(context.cacheDir, "current_viewing.pdf")
+                    val fileToLoad = if (currentPdfPassword != null) File(context.cacheDir, "decrypted_view.pdf") else tempFile
+                    if (currentPdfPassword != null) {
+                        PDDocument.load(fileToLoad, currentPdfPassword)
+                    } else {
+                        PDDocument.load(fileToLoad)
+                    }
+                } catch (e: Exception) {
+                    null
+                }
+                
+                if (doc != null) {
+                    try {
+                        val stripper = PDFTextStripper()
+                        for (i in 0 until totalPages) {
+                            stripper.startPage = i + 1
+                            stripper.endPage = i + 1
+                            val pageText = stripper.getText(doc)
+                            if (pageText != null && pageText.contains(query, ignoreCase = true)) {
+                                results.add(i)
+                            }
+                        }
+                    } catch (e: Exception) {
+                        e.printStackTrace()
                     }
                 }
                 results
@@ -779,10 +850,11 @@ class ReaderFragment : Fragment() {
                 try {
                     val doc = pdDocument ?: run {
                         val tempFile = File(context.cacheDir, "current_viewing.pdf")
+                        val fileToLoad = if (currentPdfPassword != null) File(context.cacheDir, "decrypted_view.pdf") else tempFile
                         if (currentPdfPassword != null) {
-                            PDDocument.load(tempFile, currentPdfPassword)
+                            PDDocument.load(fileToLoad, currentPdfPassword)
                         } else {
-                            PDDocument.load(tempFile)
+                            PDDocument.load(fileToLoad)
                         }
                     }
                     val stripper = PDFTextStripper()
@@ -855,7 +927,24 @@ class ReaderFragment : Fragment() {
     override fun onDestroyView() {
         pdDocument?.close()
         pdDocument = null
+        try {
+            pdfRenderer?.close()
+        } catch (e: Exception) {}
+        pdfRenderer = null
+        try {
+            parcelFileDescriptor?.close()
+        } catch (e: Exception) {}
+        parcelFileDescriptor = null
         super.onDestroyView()
         _binding = null
+    }
+}
+
+private fun String.addTagToFileName(tag: String): String {
+    val dotIndex = this.lastIndexOf('.')
+    return if (dotIndex != -1) {
+        "${this.substring(0, dotIndex)}_$tag${this.substring(dotIndex)}"
+    } else {
+        "${this}_$tag"
     }
 }
