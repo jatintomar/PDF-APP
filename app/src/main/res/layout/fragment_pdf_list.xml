@@ -71,6 +71,50 @@
             android:maxLines="1" />
     </com.google.android.material.textfield.TextInputLayout>
 
+    <!-- Navigation and Sorting Bar -->
+    <LinearLayout
+        android:id="@+id/ll_nav_sort_bar"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        android:gravity="center_vertical"
+        android:layout_marginBottom="12dp">
+
+        <ImageButton
+            android:id="@+id/btn_back_to_folders"
+            android:layout_width="36dp"
+            android:layout_height="36dp"
+            android:background="?attr/selectableItemBackgroundBorderless"
+            android:src="@drawable/ic_back_arrow"
+            android:contentDescription="Back to folders"
+            app:tint="@color/primary"
+            android:visibility="gone"
+            android:layout_marginEnd="8dp" />
+
+        <TextView
+            android:id="@+id/tv_current_folder_title"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:text="📁 Folders"
+            android:textSize="16sp"
+            android:textStyle="bold"
+            android:textColor="@color/on_surface"
+            android:ellipsize="start"
+            android:singleLine="true" />
+
+        <Button
+            android:id="@+id/btn_sort_pdfs"
+            style="@style/Widget.MaterialComponents.Button.TextButton"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Sort"
+            android:textSize="13sp"
+            android:textColor="@color/primary"
+            app:icon="@drawable/ic_sort"
+            app:iconTint="@color/primary" />
+    </LinearLayout>
+
     <!-- Content Area -->
     <FrameLayout
         android:layout_width="match_parent"
