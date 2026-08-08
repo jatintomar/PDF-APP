@@ -112,6 +112,17 @@ class ReaderFragment : Fragment() {
                 if (pos != RecyclerView.NO_POSITION && pos != currentPage) {
                     currentPage = pos
                     (activity as? androidx.appcompat.app.AppCompatActivity)?.supportActionBar?.subtitle = "Page ${pos + 1} of $totalPages"
+                    
+                    // Update bottom scrubber if visible
+                    if (binding.cvScrubber.visibility == View.VISIBLE) {
+                        binding.sbReaderScrubber.progress = pos
+                        binding.tvScrubberPageInfo.text = "Page ${pos + 1} of $totalPages"
+                    }
+                    
+                    // Save last opened page index
+                    currentPdfUri?.let { uri ->
+                        saveLastOpenedPage(uri, pos)
+                    }
                 }
             }
         })
@@ -234,7 +245,20 @@ class ReaderFragment : Fragment() {
                     binding.pbRendering.visibility = View.GONE
                     totalPages = core!!.countPages()
                     
-                    (activity as? androidx.appcompat.app.AppCompatActivity)?.supportActionBar?.subtitle = "Page 1 of $totalPages"
+                    val savedPage = getLastOpenedPage(uri)
+                    val startPage = if (savedPage in 0 until totalPages) savedPage else 0
+                    currentPage = startPage
+                    
+                    (activity as? androidx.appcompat.app.AppCompatActivity)?.supportActionBar?.subtitle = "Page ${startPage + 1} of $totalPages"
+                    
+                    setupScrubber(startPage, totalPages)
+                    
+                    binding.pdfRecyclerView.post {
+                        if (startPage > 0 && startPage < totalPages) {
+                            binding.pdfRecyclerView.scrollToPosition(startPage)
+                            Toast.makeText(requireContext(), "Resumed at Page ${startPage + 1}", Toast.LENGTH_SHORT).show()
+                        }
+                    }
 
                     withContext(Dispatchers.IO) {
                         try {
@@ -306,7 +330,21 @@ class ReaderFragment : Fragment() {
                     binding.pbRendering.visibility = View.GONE
                     
                     totalPages = core!!.countPages()
-                    (activity as? androidx.appcompat.app.AppCompatActivity)?.supportActionBar?.subtitle = "Page 1 of $totalPages"
+                    
+                    val savedPage = getLastOpenedPage(uri)
+                    val startPage = if (savedPage in 0 until totalPages) savedPage else 0
+                    currentPage = startPage
+                    
+                    (activity as? androidx.appcompat.app.AppCompatActivity)?.supportActionBar?.subtitle = "Page ${startPage + 1} of $totalPages"
+                    
+                    setupScrubber(startPage, totalPages)
+                    
+                    binding.pdfRecyclerView.post {
+                        if (startPage > 0 && startPage < totalPages) {
+                            binding.pdfRecyclerView.scrollToPosition(startPage)
+                            Toast.makeText(requireContext(), "Resumed at Page ${startPage + 1}", Toast.LENGTH_SHORT).show()
+                        }
+                    }
 
                     withContext(Dispatchers.IO) {
                         try {
@@ -333,6 +371,7 @@ class ReaderFragment : Fragment() {
         if (query.isEmpty()) return
         binding.pbRendering.visibility = View.VISIBLE
         binding.llSearchNavigation.visibility = View.GONE
+        binding.cvScrubber.visibility = View.GONE
         
         lifecycleScope.launch {
             val matches = withContext(Dispatchers.IO) {
@@ -364,6 +403,9 @@ class ReaderFragment : Fragment() {
                 searchResults.clear()
                 currentSearchIndex = -1
                 Toast.makeText(requireContext(), "No matches found for '$query'", Toast.LENGTH_SHORT).show()
+                if (totalPages > 1) {
+                    binding.cvScrubber.visibility = View.VISIBLE
+                }
             }
         }
     }
@@ -372,6 +414,9 @@ class ReaderFragment : Fragment() {
         currentSearchQuery = null
         pdfAdapter?.setSearchQuery(null, -1)
         binding.llSearchNavigation.visibility = View.GONE
+        if (totalPages > 1) {
+            binding.cvScrubber.visibility = View.VISIBLE
+        }
         searchResults.clear()
         currentSearchIndex = -1
     }
@@ -580,6 +625,49 @@ class ReaderFragment : Fragment() {
         } catch (e: Exception) {
             e.printStackTrace()
         }
+    }
+
+    private fun saveLastOpenedPage(uri: Uri, pageIndex: Int) {
+        val context = context ?: return
+        val sharedPref = context.getSharedPreferences("pdf_page_history", Context.MODE_PRIVATE)
+        sharedPref.edit().putInt(uri.toString(), pageIndex).apply()
+    }
+
+    private fun getLastOpenedPage(uri: Uri): Int {
+        val context = context ?: return 0
+        val sharedPref = context.getSharedPreferences("pdf_page_history", Context.MODE_PRIVATE)
+        return sharedPref.getInt(uri.toString(), 0)
+    }
+
+    private fun setupScrubber(startPage: Int, total: Int) {
+        if (total <= 1) {
+            binding.cvScrubber.visibility = View.GONE
+            return
+        }
+        binding.cvScrubber.visibility = View.VISIBLE
+        binding.tvScrubberPageInfo.text = "Page ${startPage + 1} of $total"
+        binding.tvScrubberTotalPages.text = total.toString()
+        
+        binding.sbReaderScrubber.max = total - 1
+        binding.sbReaderScrubber.progress = startPage
+        
+        binding.sbReaderScrubber.setOnSeekBarChangeListener(object : android.widget.SeekBar.OnSeekBarChangeListener {
+            override fun onProgressChanged(seekBar: android.widget.SeekBar?, progress: Int, fromUser: Boolean) {
+                if (fromUser) {
+                    binding.pdfRecyclerView.scrollToPosition(progress)
+                    binding.tvScrubberPageInfo.text = "Page ${progress + 1} of $total"
+                    (activity as? androidx.appcompat.app.AppCompatActivity)?.supportActionBar?.subtitle = "Page ${progress + 1} of $total"
+                    currentPage = progress
+                    
+                    currentPdfUri?.let { uri ->
+                        saveLastOpenedPage(uri, progress)
+                    }
+                }
+            }
+            
+            override fun onStartTrackingTouch(seekBar: android.widget.SeekBar?) {}
+            override fun onStopTrackingTouch(seekBar: android.widget.SeekBar?) {}
+        })
     }
 
     override fun onDestroyView() {
