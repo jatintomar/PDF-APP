@@ -237,7 +237,10 @@ class ReaderFragment : Fragment() {
                     }
                     
                     val metrics = resources.displayMetrics
-                    pdfAdapter = PdfViewerAdapter(context, core!!, metrics.widthPixels) { pageIndex, x, y, viewWidth, viewHeight ->
+                    val density = metrics.density
+                    val marginPx = (16 * density).toInt()
+                    val availableWidth = metrics.widthPixels - 2 * marginPx
+                    pdfAdapter = PdfViewerAdapter(context, core!!, availableWidth) { pageIndex, x, y, viewWidth, viewHeight ->
                         handlePageClick(pageIndex, x, y, viewWidth, viewHeight)
                     }
                     binding.pdfRecyclerView.adapter = pdfAdapter
@@ -323,7 +326,10 @@ class ReaderFragment : Fragment() {
                 try {
                     core = MuPDFCore(tempFile.readBytes(), "pdf")
                     val metrics = resources.displayMetrics
-                    pdfAdapter = PdfViewerAdapter(context, core!!, metrics.widthPixels) { pageIndex, x, y, viewWidth, viewHeight ->
+                    val density = metrics.density
+                    val marginPx = (16 * density).toInt()
+                    val availableWidth = metrics.widthPixels - 2 * marginPx
+                    pdfAdapter = PdfViewerAdapter(context, core!!, availableWidth) { pageIndex, x, y, viewWidth, viewHeight ->
                         handlePageClick(pageIndex, x, y, viewWidth, viewHeight)
                     }
                     binding.pdfRecyclerView.adapter = pdfAdapter

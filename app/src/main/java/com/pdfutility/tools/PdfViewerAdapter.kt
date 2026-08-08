@@ -34,16 +34,41 @@ class PdfViewerAdapter(
         notifyDataSetChanged()
     }
 
-    inner class PageViewHolder(val imageView: ImageView) : RecyclerView.ViewHolder(imageView) {
+    inner class PageViewHolder(val cardView: View, val imageView: ImageView) : RecyclerView.ViewHolder(cardView) {
         var job: Job? = null
     }
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): PageViewHolder {
-        val imageView = ImageView(context)
-        imageView.layoutParams = ViewGroup.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT)
-        imageView.scaleType = ImageView.ScaleType.FIT_CENTER
-        imageView.adjustViewBounds = true
-        return PageViewHolder(imageView)
+        val cardView = com.google.android.material.card.MaterialCardView(context).apply {
+            layoutParams = ViewGroup.MarginLayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT).apply {
+                val density = context.resources.displayMetrics.density
+                setMargins(
+                    (16 * density).toInt(),
+                    (8 * density).toInt(),
+                    (16 * density).toInt(),
+                    (8 * density).toInt()
+                )
+            }
+            cardElevation = 3 * context.resources.displayMetrics.density
+            radius = 6 * context.resources.displayMetrics.density
+            strokeWidth = 0
+            setCardBackgroundColor(Color.WHITE)
+            preventCornerOverlap = true
+            useCompatPadding = false
+        }
+        
+        val imageView = ImageView(context).apply {
+            layoutParams = android.widget.FrameLayout.LayoutParams(
+                ViewGroup.LayoutParams.WRAP_CONTENT,
+                ViewGroup.LayoutParams.WRAP_CONTENT,
+                android.view.Gravity.CENTER
+            )
+            scaleType = ImageView.ScaleType.FIT_CENTER
+            adjustViewBounds = true
+        }
+        
+        cardView.addView(imageView)
+        return PageViewHolder(cardView, imageView)
     }
 
     override fun onBindViewHolder(holder: PageViewHolder, position: Int) {
@@ -74,8 +99,12 @@ class PdfViewerAdapter(
                 }
                 
                 if (size != null && size.x > 0 && size.y > 0) {
-                    val scale = screenWidth.toFloat() / size.x
-                    val width = screenWidth
+                    val density = context.resources.displayMetrics.density
+                    // Limit the maximum width of the rendered bitmap for small page sizes (like receipt/image PDFs)
+                    // so we do not stretch them to the extreme screen width boundaries
+                    val targetWidth = minOf(screenWidth, (size.x * density * 1.3f).toInt())
+                    val scale = targetWidth.toFloat() / size.x
+                    val width = targetWidth
                     val height = (size.y * scale).toInt()
                     
                     if (width > 0 && height > 0) {
