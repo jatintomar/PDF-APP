@@ -12,6 +12,7 @@ import android.widget.Toast
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.lifecycleScope
+import android.view.MotionEvent
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import com.artifex.mupdf.viewer.MuPDFCore
@@ -36,6 +37,7 @@ class ReaderFragment : Fragment() {
     private var isFromIntent = false
     private var totalPages = 0
     private var currentPage = 0
+    private var isDraggingScrollbar = false
     
     private var core: MuPDFCore? = null
     private var pdfAdapter: PdfViewerAdapter? = null
@@ -113,10 +115,8 @@ class ReaderFragment : Fragment() {
                     currentPage = pos
                     (activity as? androidx.appcompat.app.AppCompatActivity)?.supportActionBar?.subtitle = "Page ${pos + 1} of $totalPages"
                     
-                    // Update bottom scrubber if visible
-                    if (binding.cvScrubber.visibility == View.VISIBLE) {
-                        binding.sbReaderScrubber.progress = pos
-                        binding.tvScrubberPageInfo.text = "Page ${pos + 1} of $totalPages"
+                    if (!isDraggingScrollbar) {
+                        updateScrollbarThumbPosition(pos)
                     }
                     
                     // Save last opened page index
@@ -371,7 +371,7 @@ class ReaderFragment : Fragment() {
         if (query.isEmpty()) return
         binding.pbRendering.visibility = View.VISIBLE
         binding.llSearchNavigation.visibility = View.GONE
-        binding.cvScrubber.visibility = View.GONE
+        binding.rlVerticalScrollbar.visibility = View.GONE
         
         lifecycleScope.launch {
             val matches = withContext(Dispatchers.IO) {
@@ -404,7 +404,7 @@ class ReaderFragment : Fragment() {
                 currentSearchIndex = -1
                 Toast.makeText(requireContext(), "No matches found for '$query'", Toast.LENGTH_SHORT).show()
                 if (totalPages > 1) {
-                    binding.cvScrubber.visibility = View.VISIBLE
+                    binding.rlVerticalScrollbar.visibility = View.VISIBLE
                 }
             }
         }
@@ -415,7 +415,7 @@ class ReaderFragment : Fragment() {
         pdfAdapter?.setSearchQuery(null, -1)
         binding.llSearchNavigation.visibility = View.GONE
         if (totalPages > 1) {
-            binding.cvScrubber.visibility = View.VISIBLE
+            binding.rlVerticalScrollbar.visibility = View.VISIBLE
         }
         searchResults.clear()
         currentSearchIndex = -1
@@ -641,33 +641,75 @@ class ReaderFragment : Fragment() {
 
     private fun setupScrubber(startPage: Int, total: Int) {
         if (total <= 1) {
-            binding.cvScrubber.visibility = View.GONE
+            binding.rlVerticalScrollbar.visibility = View.GONE
             return
         }
-        binding.cvScrubber.visibility = View.VISIBLE
-        binding.tvScrubberPageInfo.text = "Page ${startPage + 1} of $total"
-        binding.tvScrubberTotalPages.text = total.toString()
+        binding.rlVerticalScrollbar.visibility = View.VISIBLE
+        binding.tvScrollbarPage.text = (startPage + 1).toString()
         
-        binding.sbReaderScrubber.max = total - 1
-        binding.sbReaderScrubber.progress = startPage
+        binding.rlVerticalScrollbar.post {
+            updateScrollbarThumbPosition(startPage)
+        }
         
-        binding.sbReaderScrubber.setOnSeekBarChangeListener(object : android.widget.SeekBar.OnSeekBarChangeListener {
-            override fun onProgressChanged(seekBar: android.widget.SeekBar?, progress: Int, fromUser: Boolean) {
-                if (fromUser) {
-                    binding.pdfRecyclerView.scrollToPosition(progress)
-                    binding.tvScrubberPageInfo.text = "Page ${progress + 1} of $total"
-                    (activity as? androidx.appcompat.app.AppCompatActivity)?.supportActionBar?.subtitle = "Page ${progress + 1} of $total"
-                    currentPage = progress
-                    
-                    currentPdfUri?.let { uri ->
-                        saveLastOpenedPage(uri, progress)
-                    }
-                }
-            }
+        binding.rlVerticalScrollbar.setOnTouchListener { view, event ->
+            if (totalPages <= 1) return@setOnTouchListener false
             
-            override fun onStartTrackingTouch(seekBar: android.widget.SeekBar?) {}
-            override fun onStopTrackingTouch(seekBar: android.widget.SeekBar?) {}
-        })
+            val containerHeight = view.height
+            val thumbHeight = binding.scrollbarThumb.height
+            val range = containerHeight - thumbHeight
+            
+            if (range <= 0) return@setOnTouchListener false
+            
+            when (event.action) {
+                MotionEvent.ACTION_DOWN, MotionEvent.ACTION_MOVE -> {
+                    isDraggingScrollbar = true
+                    view.parent.requestDisallowInterceptTouchEvent(true)
+                    
+                    val touchY = event.y
+                    var targetY = touchY - (thumbHeight / 2f)
+                    if (targetY < 0) targetY = 0f
+                    if (targetY > range) targetY = range.toFloat()
+                    
+                    binding.scrollbarThumb.translationY = targetY
+                    
+                    val progress = targetY / range
+                    val targetPage = Math.round(progress * (totalPages - 1)).toInt()
+                    
+                    if (targetPage in 0 until totalPages && targetPage != currentPage) {
+                        currentPage = targetPage
+                        binding.pdfRecyclerView.scrollToPosition(targetPage)
+                        binding.tvScrollbarPage.text = (targetPage + 1).toString()
+                        (activity as? androidx.appcompat.app.AppCompatActivity)?.supportActionBar?.subtitle = "Page ${targetPage + 1} of $totalPages"
+                        
+                        currentPdfUri?.let { uri ->
+                            saveLastOpenedPage(uri, targetPage)
+                        }
+                    }
+                    true
+                }
+                MotionEvent.ACTION_UP, MotionEvent.ACTION_CANCEL -> {
+                    isDraggingScrollbar = false
+                    true
+                }
+                else -> false
+            }
+        }
+    }
+
+    private fun updateScrollbarThumbPosition(pageIndex: Int) {
+        if (totalPages <= 1) return
+        binding.tvScrollbarPage.text = (pageIndex + 1).toString()
+        
+        binding.rlVerticalScrollbar.post {
+            val containerHeight = binding.rlVerticalScrollbar.height
+            val thumbHeight = binding.scrollbarThumb.height
+            val range = containerHeight - thumbHeight
+            if (range > 0) {
+                val progress = pageIndex.toFloat() / (totalPages - 1)
+                val targetY = progress * range
+                binding.scrollbarThumb.translationY = targetY
+            }
+        }
     }
 
     override fun onDestroyView() {

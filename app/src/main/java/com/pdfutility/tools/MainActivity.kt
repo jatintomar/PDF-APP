@@ -11,7 +11,13 @@ class MainActivity : AppCompatActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         com.google.android.material.color.DynamicColors.applyIfAvailable(this)
-        androidx.appcompat.app.AppCompatDelegate.setDefaultNightMode(androidx.appcompat.app.AppCompatDelegate.MODE_NIGHT_NO)
+        val sharedPref = getSharedPreferences("app_settings", MODE_PRIVATE)
+        val isDarkMode = sharedPref.getBoolean("dark_mode", false)
+        if (isDarkMode) {
+            androidx.appcompat.app.AppCompatDelegate.setDefaultNightMode(androidx.appcompat.app.AppCompatDelegate.MODE_NIGHT_YES)
+        } else {
+            androidx.appcompat.app.AppCompatDelegate.setDefaultNightMode(androidx.appcompat.app.AppCompatDelegate.MODE_NIGHT_NO)
+        }
         super.onCreate(savedInstanceState)
         
         // Initialize PDFBox resource loader for Android
@@ -65,5 +71,36 @@ class MainActivity : AppCompatActivity() {
             transaction.addToBackStack(null)
         }
         transaction.commit()
+    }
+
+    override fun onCreateOptionsMenu(menu: android.view.Menu): Boolean {
+        menuInflater.inflate(R.menu.main_menu, menu)
+        val toggleItem = menu.findItem(R.id.action_toggle_theme)
+        val sharedPref = getSharedPreferences("app_settings", MODE_PRIVATE)
+        val isDarkMode = sharedPref.getBoolean("dark_mode", false)
+        if (isDarkMode) {
+            toggleItem?.setIcon(R.drawable.ic_sun)
+        } else {
+            toggleItem?.setIcon(R.drawable.ic_moon)
+        }
+        return true
+    }
+
+    override fun onOptionsItemSelected(item: android.view.MenuItem): Boolean {
+        if (item.itemId == R.id.action_toggle_theme) {
+            val sharedPref = getSharedPreferences("app_settings", MODE_PRIVATE)
+            val isDarkMode = sharedPref.getBoolean("dark_mode", false)
+            val newMode = !isDarkMode
+            sharedPref.edit().putBoolean("dark_mode", newMode).apply()
+            
+            if (newMode) {
+                androidx.appcompat.app.AppCompatDelegate.setDefaultNightMode(androidx.appcompat.app.AppCompatDelegate.MODE_NIGHT_YES)
+            } else {
+                androidx.appcompat.app.AppCompatDelegate.setDefaultNightMode(androidx.appcompat.app.AppCompatDelegate.MODE_NIGHT_NO)
+            }
+            recreate()
+            return true
+        }
+        return super.onOptionsItemSelected(item)
     }
 }
