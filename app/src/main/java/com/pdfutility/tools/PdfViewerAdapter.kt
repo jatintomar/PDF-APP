@@ -6,21 +6,22 @@ import android.graphics.Canvas
 import android.graphics.Color
 import android.graphics.Paint
 import android.graphics.PointF
-import android.graphics.pdf.PdfRenderer
+import android.graphics.Rect
+import android.view.LayoutInflater
 import android.view.MotionEvent
+import android.view.View
 import android.view.ViewGroup
 import android.widget.ImageView
 import androidx.recyclerview.widget.RecyclerView
+import com.artifex.mupdf.viewer.MuPDFCore
 import kotlinx.coroutines.*
 import java.util.concurrent.ConcurrentHashMap
 
 class PdfViewerAdapter(
     private val context: Context,
-    private val scope: CoroutineScope,
-    private val renderer: PdfRenderer,
+    private val core: MuPDFCore,
     private val screenWidth: Int,
-    private val onPageClick: (pageIndex: Int, x: Float, y: Float, viewWidth: Float, viewHeight: Float) -> Unit,
-    private val onPageLongClick: (pageIndex: Int) -> Unit
+    private val onPageClick: (pageIndex: Int, x: Float, y: Float, viewWidth: Float, viewHeight: Float) -> Unit
 ) : RecyclerView.Adapter<PdfViewerAdapter.PageViewHolder>() {
 
     private val pageSizes = ConcurrentHashMap<Int, PointF>()
@@ -64,68 +65,46 @@ class PdfViewerAdapter(
             onPageClick(position, lastTouchX, lastTouchY, view.width.toFloat(), view.height.toFloat())
         }
         
-        holder.imageView.setOnLongClickListener {
-            onPageLongClick(position)
-            true
-        }
-        
-        holder.job = scope.launch(Dispatchers.IO) {
+        holder.job = CoroutineScope(Dispatchers.IO).launch {
             try {
                 var size = pageSizes[position]
                 if (size == null) {
-                    synchronized(renderer) {
-                        try {
-                            if (position in 0 until renderer.pageCount) {
-                                val page = renderer.openPage(position)
-                                size = PointF(page.width.toFloat(), page.height.toFloat())
-                                page.close()
-                            }
-                        } catch (t: Throwable) {
-                            t.printStackTrace()
-                        }
-                    }
-                    if (size != null) {
-                        pageSizes[position] = size!!
-                    }
+                    size = core.getPageSize(position)
+                    pageSizes[position] = size
                 }
                 
-                val currentSize = size
-                if (currentSize != null && currentSize.x > 0 && currentSize.y > 0) {
-                    val scale = screenWidth.toFloat() / currentSize.x
+                if (size != null && size.x > 0 && size.y > 0) {
+                    val scale = screenWidth.toFloat() / size.x
                     val width = screenWidth
-                    val height = (currentSize.y * scale).toInt()
+                    val height = (size.y * scale).toInt()
                     
                     if (width > 0 && height > 0) {
                         val bitmap = Bitmap.createBitmap(width, height, Bitmap.Config.ARGB_8888)
                         bitmap.eraseColor(Color.WHITE)
-                        
-                        synchronized(renderer) {
-                            try {
-                                if (position in 0 until renderer.pageCount) {
-                                    val page = renderer.openPage(position)
-                                    page.render(bitmap, null, null, PdfRenderer.Page.RENDER_MODE_FOR_DISPLAY)
-                                    page.close()
-                                }
-                            } catch (t: Throwable) {
-                                t.printStackTrace()
-                            }
-                        }
+                        core.drawPage(bitmap, position, width, height, 0, 0, width, height, null)
                         
                         val q = searchQuery
                         if (!q.isNullOrEmpty() && position == highlightPage) {
-                            val canvas = Canvas(bitmap)
-                            val paint = Paint().apply {
-                                color = Color.parseColor("#331D4ED8") // 20% alpha primary blue
-                                style = Paint.Style.FILL
+                            val boxes = core.searchPage(position, q)
+                            if (boxes != null && boxes.isNotEmpty()) {
+                                val canvas = Canvas(bitmap)
+                                val paint = Paint().apply {
+                                    color = Color.argb(128, 255, 255, 0)
+                                    style = Paint.Style.FILL
+                                }
+                                for (boxArray in boxes) {
+                                    for (quad in boxArray) {
+                                        // quad coordinates are relative to the original page size, so scale them
+                                        canvas.drawRect(
+                                            quad.ul_x * scale,
+                                            quad.ul_y * scale,
+                                            quad.lr_x * scale,
+                                            quad.lr_y * scale,
+                                            paint
+                                        )
+                                    }
+                                }
                             }
-                            canvas.drawRect(0f, 0f, width.toFloat(), height.toFloat(), paint)
-                            
-                            val borderPaint = Paint().apply {
-                                color = Color.parseColor("#1D4ED8") // primary blue
-                                style = Paint.Style.STROKE
-                                strokeWidth = 12f
-                            }
-                            canvas.drawRect(0f, 0f, width.toFloat(), height.toFloat(), borderPaint)
                         }
                         
                         withContext(Dispatchers.Main) {
@@ -133,21 +112,11 @@ class PdfViewerAdapter(
                         }
                     }
                 }
-            } catch (t: Throwable) {
-                t.printStackTrace()
+            } catch (e: Exception) {
+                e.printStackTrace()
             }
         }
     }
 
-    override fun getItemCount(): Int {
-        var count = 0
-        try {
-            synchronized(renderer) {
-                count = renderer.pageCount
-            }
-        } catch (t: Throwable) {
-            t.printStackTrace()
-        }
-        return count
-    }
+    override fun getItemCount(): Int = core.countPages()
 }

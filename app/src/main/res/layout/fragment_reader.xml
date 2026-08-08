@@ -67,12 +67,7 @@
                 android:layout_height="match_parent"
                 android:scrollbars="vertical"
                 android:fadeScrollbars="false"
-                android:scrollbarSize="6dp"
-                app:fastScrollEnabled="true"
-                app:fastScrollVerticalThumbDrawable="@drawable/fastscroll_thumb"
-                app:fastScrollVerticalTrackDrawable="@drawable/fastscroll_track"
-                app:fastScrollHorizontalThumbDrawable="@drawable/fastscroll_thumb"
-                app:fastScrollHorizontalTrackDrawable="@drawable/fastscroll_track" />
+                android:scrollbarSize="6dp" />
 
             <!-- Search Navigation Bar -->
             <LinearLayout

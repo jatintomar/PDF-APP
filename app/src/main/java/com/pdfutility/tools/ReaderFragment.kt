@@ -2,10 +2,8 @@ package com.pdfutility.tools
 
 import android.content.Context
 import android.graphics.RectF
-import android.graphics.pdf.PdfRenderer
 import android.net.Uri
 import android.os.Bundle
-import android.os.ParcelFileDescriptor
 import android.provider.OpenableColumns
 import android.view.LayoutInflater
 import android.view.View
@@ -16,9 +14,9 @@ import androidx.fragment.app.Fragment
 import androidx.lifecycle.lifecycleScope
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
+import com.artifex.mupdf.viewer.MuPDFCore
 import com.pdfutility.tools.databinding.FragmentReaderBinding
 import com.tom_roush.pdfbox.pdmodel.PDDocument
-import com.tom_roush.pdfbox.text.PDFTextStripper
 import com.tom_roush.pdfbox.pdmodel.interactive.action.PDActionURI
 import com.tom_roush.pdfbox.pdmodel.interactive.action.PDActionGoTo
 import com.tom_roush.pdfbox.pdmodel.interactive.documentnavigation.destination.PDPageDestination
@@ -39,13 +37,11 @@ class ReaderFragment : Fragment() {
     private var totalPages = 0
     private var currentPage = 0
     
-    private var pdfRenderer: PdfRenderer? = null
-    private var parcelFileDescriptor: ParcelFileDescriptor? = null
+    private var core: MuPDFCore? = null
     private var pdfAdapter: PdfViewerAdapter? = null
     private var currentSearchQuery: String? = null
     
     private var pdDocument: PDDocument? = null
-    private var decryptedFile: File? = null
 
     private val saveUnlockedLauncher = registerForActivityResult(ActivityResultContracts.CreateDocument("application/pdf")) { uri ->
         if (uri != null) {
@@ -88,7 +84,7 @@ class ReaderFragment : Fragment() {
         
         setupMenu()
         
-        binding.btnSearchPrev.setOnClickListener {
+                binding.btnSearchPrev.setOnClickListener {
             if (searchResults.isNotEmpty()) {
                 currentSearchIndex = (currentSearchIndex - 1 + searchResults.size) % searchResults.size
                 pdfAdapter?.setSearchQuery(currentSearchQuery, searchResults[currentSearchIndex])
@@ -109,19 +105,6 @@ class ReaderFragment : Fragment() {
         }
 
         binding.pdfRecyclerView.layoutManager = LinearLayoutManager(requireContext())
-        binding.pdfRecyclerView.addOnLayoutChangeListener { _, _, _, _, _, _, _, _, _ ->
-            if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.Q) {
-                val rects = listOf(
-                    android.graphics.Rect(
-                        binding.pdfRecyclerView.width - 100,
-                        0,
-                        binding.pdfRecyclerView.width,
-                        binding.pdfRecyclerView.height
-                    )
-                )
-                binding.pdfRecyclerView.systemGestureExclusionRects = rects
-            }
-        }
         binding.pdfRecyclerView.addOnScrollListener(object : RecyclerView.OnScrollListener() {
             override fun onScrolled(recyclerView: RecyclerView, dx: Int, dy: Int) {
                 val lm = recyclerView.layoutManager as LinearLayoutManager
@@ -129,7 +112,6 @@ class ReaderFragment : Fragment() {
                 if (pos != RecyclerView.NO_POSITION && pos != currentPage) {
                     currentPage = pos
                     (activity as? androidx.appcompat.app.AppCompatActivity)?.supportActionBar?.subtitle = "Page ${pos + 1} of $totalPages"
-                    saveLastReadPosition()
                 }
             }
         })
@@ -183,14 +165,6 @@ class ReaderFragment : Fragment() {
                         saveUnlockedLauncher.launch(originalName.addTagToFileName("unlocked"))
                         true
                     }
-                    com.pdfutility.tools.R.id.action_add_bookmark -> {
-                        showAddBookmarkDialog()
-                        true
-                    }
-                    com.pdfutility.tools.R.id.action_view_bookmarks -> {
-                        showBookmarksListDialog()
-                        true
-                    }
                     com.pdfutility.tools.R.id.action_jump_to_page -> {
                         showJumpToPageDialog()
                         true
@@ -208,7 +182,7 @@ class ReaderFragment : Fragment() {
         binding.pbRendering.visibility = View.VISIBLE
 
         val context = requireContext()
-        val fileName = context.getFileName(uri)
+        val fileName = getFileName(context, uri)
         val isDocx = fileName.endsWith(".docx", ignoreCase = true)
 
         (activity as? androidx.appcompat.app.AppCompatActivity)?.supportActionBar?.title = fileName
@@ -238,101 +212,39 @@ class ReaderFragment : Fragment() {
             }
 
             if (copySuccess) {
-                // 1. Check if encrypted and decrypt if necessary
-                var isEncrypted = false
-                withContext(Dispatchers.IO) {
-                    try {
-                        PDDocument.load(tempFile).use { doc ->
-                            isEncrypted = doc.isEncrypted
-                        }
-                    } catch (t: Throwable) {
-                        isEncrypted = true
-                    }
-                }
-
-                if (isEncrypted && password == null) {
-                    binding.pbRendering.visibility = View.GONE
-                    showPasswordPrompt(uri)
-                    return@launch
-                }
-
-                val decryptedFileLocal = File(context.cacheDir, "decrypted_view.pdf")
-                val decryptionSuccess = withContext(Dispatchers.IO) {
-                    try {
-                        val doc = if (password != null) {
-                            PDDocument.load(tempFile, password)
-                        } else {
-                            PDDocument.load(tempFile)
-                        }
-                        doc.use { d ->
-                            d.setAllSecurityToBeRemoved(true)
-                            decryptedFileLocal.outputStream().use { out ->
-                                d.save(out)
-                            }
-                        }
-                        true
-                    } catch (t: Throwable) {
-                        t.printStackTrace()
-                        false
-                    }
-                }
-
-                if (!decryptionSuccess) {
-                    binding.pbRendering.visibility = View.GONE
-                    if (isEncrypted) {
-                        Toast.makeText(context, "Incorrect password", Toast.LENGTH_SHORT).show()
-                        showPasswordPrompt(uri)
-                    } else {
-                        showEmptyState("Failed to decrypt or read PDF.")
-                    }
-                    return@launch
-                }
-
-                currentPdfPassword = password
-                decryptedFile = decryptedFileLocal
-
                 try {
-                    parcelFileDescriptor?.close()
-                    parcelFileDescriptor = ParcelFileDescriptor.open(decryptedFileLocal, ParcelFileDescriptor.MODE_READ_ONLY)
-                    val renderer = PdfRenderer(parcelFileDescriptor!!)
-                    pdfRenderer = renderer
+                    core = MuPDFCore(tempFile.readBytes(), "pdf")
+                    
+                    if (core!!.needsPassword()) {
+                        if (password != null && core!!.authenticatePassword(password)) {
+                            // Password accepted
+                        } else {
+                            binding.pbRendering.visibility = View.GONE
+                            showPasswordPrompt(uri)
+                            return@launch
+                        }
+                    }
                     
                     val metrics = resources.displayMetrics
-                    pdfAdapter = PdfViewerAdapter(context, viewLifecycleOwner.lifecycleScope, renderer, metrics.widthPixels,
-                        onPageClick = { pageIndex, x, y, viewWidth, viewHeight ->
-                            handlePageClick(pageIndex, x, y, viewWidth, viewHeight)
-                        },
-                        onPageLongClick = { pageIndex ->
-                            handlePageLongClick(pageIndex)
-                        }
-                    )
+                    pdfAdapter = PdfViewerAdapter(context, core!!, metrics.widthPixels) { pageIndex, x, y, viewWidth, viewHeight ->
+                        handlePageClick(pageIndex, x, y, viewWidth, viewHeight)
+                    }
                     binding.pdfRecyclerView.adapter = pdfAdapter
                     
                     binding.pbRendering.visibility = View.GONE
-                    totalPages = renderer.pageCount
+                    totalPages = core!!.countPages()
                     
-                    val savedPage = getSavedPage(uri)
-                    val savedScale = getSavedScale(uri)
-                    val savedTransX = getSavedTransX(uri)
-                    val savedTransY = getSavedTransY(uri)
-                    
-                    if (savedPage in 0 until totalPages) {
-                        currentPage = savedPage
-                        binding.pdfRecyclerView.scrollToPosition(savedPage)
-                    }
-                    if (savedScale > 1f) {
-                        binding.pdfRecyclerView.post {
-                            binding.pdfRecyclerView.setZoom(savedScale, savedTransX, savedTransY)
-                        }
-                    }
-                    
-                    (activity as? androidx.appcompat.app.AppCompatActivity)?.supportActionBar?.subtitle = "Page ${currentPage + 1} of $totalPages"
+                    (activity as? androidx.appcompat.app.AppCompatActivity)?.supportActionBar?.subtitle = "Page 1 of $totalPages"
 
                     withContext(Dispatchers.IO) {
                         try {
-                            pdDocument = PDDocument.load(decryptedFileLocal)
-                        } catch (t: Throwable) {
-                            t.printStackTrace()
+                            pdDocument = if (password != null) {
+                                PDDocument.load(tempFile, password)
+                            } else {
+                                PDDocument.load(tempFile)
+                            }
+                        } catch (e: Exception) {
+                            e.printStackTrace()
                         }
                     }
                     
@@ -385,47 +297,22 @@ class ReaderFragment : Fragment() {
 
             if (success) {
                 try {
-                    parcelFileDescriptor?.close()
-                    parcelFileDescriptor = ParcelFileDescriptor.open(tempFile, ParcelFileDescriptor.MODE_READ_ONLY)
-                    val renderer = PdfRenderer(parcelFileDescriptor!!)
-                    pdfRenderer = renderer
-
+                    core = MuPDFCore(tempFile.readBytes(), "pdf")
                     val metrics = resources.displayMetrics
-                    pdfAdapter = PdfViewerAdapter(context, viewLifecycleOwner.lifecycleScope, renderer, metrics.widthPixels,
-                        onPageClick = { pageIndex, x, y, viewWidth, viewHeight ->
-                            handlePageClick(pageIndex, x, y, viewWidth, viewHeight)
-                        },
-                        onPageLongClick = { pageIndex ->
-                            handlePageLongClick(pageIndex)
-                        }
-                    )
+                    pdfAdapter = PdfViewerAdapter(context, core!!, metrics.widthPixels) { pageIndex, x, y, viewWidth, viewHeight ->
+                        handlePageClick(pageIndex, x, y, viewWidth, viewHeight)
+                    }
                     binding.pdfRecyclerView.adapter = pdfAdapter
                     binding.pbRendering.visibility = View.GONE
                     
-                    totalPages = renderer.pageCount
-                    
-                    val savedPage = getSavedPage(uri)
-                    val savedScale = getSavedScale(uri)
-                    val savedTransX = getSavedTransX(uri)
-                    val savedTransY = getSavedTransY(uri)
-                    
-                    if (savedPage in 0 until totalPages) {
-                        currentPage = savedPage
-                        binding.pdfRecyclerView.scrollToPosition(savedPage)
-                    }
-                    if (savedScale > 1f) {
-                        binding.pdfRecyclerView.post {
-                            binding.pdfRecyclerView.setZoom(savedScale, savedTransX, savedTransY)
-                        }
-                    }
-                    
-                    (activity as? androidx.appcompat.app.AppCompatActivity)?.supportActionBar?.subtitle = "Page ${currentPage + 1} of $totalPages"
+                    totalPages = core!!.countPages()
+                    (activity as? androidx.appcompat.app.AppCompatActivity)?.supportActionBar?.subtitle = "Page 1 of $totalPages"
 
                     withContext(Dispatchers.IO) {
                         try {
                             pdDocument = PDDocument.load(tempFile)
-                        } catch (t: Throwable) {
-                            t.printStackTrace()
+                        } catch (e: Exception) {
+                            e.printStackTrace()
                         }
                     }
                 } catch (e: Exception) {
@@ -450,32 +337,10 @@ class ReaderFragment : Fragment() {
         lifecycleScope.launch {
             val matches = withContext(Dispatchers.IO) {
                 val results = mutableListOf<Int>()
-                val doc = pdDocument ?: try {
-                    val context = requireContext()
-                    val tempFile = File(context.cacheDir, "current_viewing.pdf")
-                    val fileToLoad = if (currentPdfPassword != null) File(context.cacheDir, "decrypted_view.pdf") else tempFile
-                    if (currentPdfPassword != null) {
-                        PDDocument.load(fileToLoad, currentPdfPassword)
-                    } else {
-                        PDDocument.load(fileToLoad)
-                    }
-                } catch (t: Throwable) {
-                    null
-                }
-                
-                if (doc != null) {
-                    try {
-                        val stripper = PDFTextStripper()
-                        for (i in 0 until totalPages) {
-                            stripper.startPage = i + 1
-                            stripper.endPage = i + 1
-                            val pageText = stripper.getText(doc)
-                            if (pageText != null && pageText.contains(query, ignoreCase = true)) {
-                                results.add(i)
-                            }
-                        }
-                    } catch (t: Throwable) {
-                        t.printStackTrace()
+                for (i in 0 until totalPages) {
+                    val boxes = core?.searchPage(i, query)
+                    if (boxes != null && boxes.isNotEmpty()) {
+                        results.add(i)
                     }
                 }
                 results
@@ -531,6 +396,31 @@ class ReaderFragment : Fragment() {
         (activity as? androidx.appcompat.app.AppCompatActivity)?.supportActionBar?.title = "PDF Reader"
     }
 
+    private fun getFileName(context: Context, uri: Uri): String {
+        var result: String? = null
+        if (uri.scheme == "content") {
+            val cursor = context.contentResolver.query(uri, null, null, null, null)
+            try {
+                if (cursor != null && cursor.moveToFirst()) {
+                    val index = cursor.getColumnIndex(OpenableColumns.DISPLAY_NAME)
+                    if (index >= 0) {
+                        result = cursor.getString(index)
+                    }
+                }
+            } finally {
+                cursor?.close()
+            }
+        }
+        if (result == null) {
+            result = uri.path
+            val cut = result?.lastIndexOf('/') ?: -1
+            if (cut != -1) {
+                result = result?.substring(cut + 1)
+            }
+        }
+        return result ?: "document.pdf"
+    }
+
     private fun sharePdf() {
         val uri = currentPdfUri ?: return
         try {
@@ -565,8 +455,8 @@ class ReaderFragment : Fragment() {
                         }
                     }
                     true
-                } catch (t: Throwable) {
-                    t.printStackTrace()
+                } catch (e: Exception) {
+                    e.printStackTrace()
                     false
                 }
             }
@@ -692,229 +582,9 @@ class ReaderFragment : Fragment() {
         }
     }
 
-    private fun getSavedPage(uri: Uri): Int {
-        if (!isAdded) return 0
-        val prefs = requireContext().getSharedPreferences("pdf_reader_positions", Context.MODE_PRIVATE)
-        return prefs.getInt("page_${uri}", 0)
-    }
-
-    private fun getSavedScale(uri: Uri): Float {
-        if (!isAdded) return 1f
-        val prefs = requireContext().getSharedPreferences("pdf_reader_positions", Context.MODE_PRIVATE)
-        return prefs.getFloat("scale_${uri}", 1f)
-    }
-
-    private fun getSavedTransX(uri: Uri): Float {
-        if (!isAdded) return 0f
-        val prefs = requireContext().getSharedPreferences("pdf_reader_positions", Context.MODE_PRIVATE)
-        return prefs.getFloat("transX_${uri}", 0f)
-    }
-
-    private fun getSavedTransY(uri: Uri): Float {
-        if (!isAdded) return 0f
-        val prefs = requireContext().getSharedPreferences("pdf_reader_positions", Context.MODE_PRIVATE)
-        return prefs.getFloat("transY_${uri}", 0f)
-    }
-
-    private fun saveLastReadPosition() {
-        val uri = currentPdfUri ?: return
-        if (!isAdded) return
-        val prefs = requireContext().getSharedPreferences("pdf_reader_positions", Context.MODE_PRIVATE)
-        val scale = binding.pdfRecyclerView.getZoomScale()
-        val transX = binding.pdfRecyclerView.getTranslationXVal()
-        val transY = binding.pdfRecyclerView.getTranslationYVal()
-        
-        prefs.edit().apply {
-            putInt("page_${uri}", currentPage)
-            putFloat("scale_${uri}", scale)
-            putFloat("transX_${uri}", transX)
-            putFloat("transY_${uri}", transY)
-            apply()
-        }
-    }
-
-    private fun showAddBookmarkDialog() {
-        val uri = currentPdfUri ?: return
-        val pageNum = currentPage + 1
-        
-        val input = android.widget.EditText(requireContext()).apply {
-            hint = "e.g., Chapter 1, Important Formula, etc."
-            setText("Page $pageNum")
-            selectAll()
-        }
-        
-        androidx.appcompat.app.AlertDialog.Builder(requireContext())
-            .setTitle("Add Bookmark")
-            .setMessage("Add bookmark for Page $pageNum with a label:")
-            .setView(input)
-            .setPositiveButton("Add") { _, _ ->
-                val label = input.text.toString().trim().ifEmpty { "Page $pageNum" }
-                addBookmark(uri, currentPage, label)
-                Toast.makeText(requireContext(), "Bookmark added!", Toast.LENGTH_SHORT).show()
-            }
-            .setNegativeButton("Cancel", null)
-            .show()
-    }
-
-    private fun addBookmark(uri: Uri, pageIndex: Int, label: String) {
-        val context = requireContext()
-        val prefs = context.getSharedPreferences("pdf_bookmarks", Context.MODE_PRIVATE)
-        val key = "bookmarks_${uri}"
-        val existingStr = prefs.getString(key, "[]")
-        try {
-            val arr = org.json.JSONArray(existingStr)
-            val obj = org.json.JSONObject().apply {
-                put("pageIndex", pageIndex)
-                put("label", label)
-                put("timestamp", System.currentTimeMillis())
-            }
-            arr.put(obj)
-            prefs.edit().putString(key, arr.toString()).apply()
-        } catch (e: Exception) {
-            e.printStackTrace()
-        }
-    }
-
-    private fun showBookmarksListDialog() {
-        val uri = currentPdfUri ?: return
-        val context = requireContext()
-        val prefs = context.getSharedPreferences("pdf_bookmarks", Context.MODE_PRIVATE)
-        val key = "bookmarks_${uri}"
-        val existingStr = prefs.getString(key, "[]")
-        
-        val itemsList = mutableListOf<Pair<Int, String>>()
-        try {
-            val arr = org.json.JSONArray(existingStr)
-            for (i in 0 until arr.length()) {
-                val obj = arr.getJSONObject(i)
-                itemsList.add(Pair(obj.getInt("pageIndex"), obj.getString("label")))
-            }
-        } catch (e: Exception) {
-            e.printStackTrace()
-        }
-        
-        if (itemsList.isEmpty()) {
-            Toast.makeText(context, "No bookmarks added yet for this PDF.", Toast.LENGTH_SHORT).show()
-            return
-        }
-        
-        val displayItems = itemsList.map { "${it.second} (Page ${it.first + 1})" }.toTypedArray()
-        
-        androidx.appcompat.app.AlertDialog.Builder(context)
-            .setTitle("Bookmarks")
-            .setItems(displayItems) { _, which ->
-                val selected = itemsList[which]
-                binding.pdfRecyclerView.scrollToPosition(selected.first)
-                currentPage = selected.first
-                (activity as? androidx.appcompat.app.AppCompatActivity)?.supportActionBar?.subtitle = "Page ${selected.first + 1} of $totalPages"
-                saveLastReadPosition()
-            }
-            .setNeutralButton("Clear All") { _, _ ->
-                prefs.edit().remove(key).apply()
-                Toast.makeText(context, "All bookmarks cleared.", Toast.LENGTH_SHORT).show()
-            }
-            .setNegativeButton("Cancel", null)
-            .show()
-    }
-
-    private fun handlePageLongClick(pageIndex: Int) {
-        val context = requireContext()
-        binding.pbRendering.visibility = View.VISIBLE
-        lifecycleScope.launch {
-            val extractedText = withContext(Dispatchers.IO) {
-                try {
-                    val doc = pdDocument ?: run {
-                        val tempFile = File(context.cacheDir, "current_viewing.pdf")
-                        val fileToLoad = if (currentPdfPassword != null) File(context.cacheDir, "decrypted_view.pdf") else tempFile
-                        if (currentPdfPassword != null) {
-                            PDDocument.load(fileToLoad, currentPdfPassword)
-                        } else {
-                            PDDocument.load(fileToLoad)
-                        }
-                    }
-                    val stripper = PDFTextStripper()
-                    stripper.startPage = pageIndex + 1
-                    stripper.endPage = pageIndex + 1
-                    stripper.getText(doc)
-                } catch (t: Throwable) {
-                    t.printStackTrace()
-                    null
-                }
-            }
-            
-            binding.pbRendering.visibility = View.GONE
-            
-            if (extractedText.isNullOrBlank()) {
-                Toast.makeText(context, "No selectable text found on this page.", Toast.LENGTH_SHORT).show()
-            } else {
-                showTextSelectionDialog(pageIndex, extractedText)
-            }
-        }
-    }
-
-    private fun showTextSelectionDialog(pageIndex: Int, text: String) {
-        val context = requireContext()
-        val container = android.widget.LinearLayout(context).apply {
-            orientation = android.widget.LinearLayout.VERTICAL
-            val density = resources.displayMetrics.density
-            val pad = (16 * density).toInt()
-            setPadding(pad, pad, pad, pad)
-        }
-        
-        val editText = android.widget.EditText(context).apply {
-            setText(text)
-            setTextIsSelectable(true)
-            keyListener = null
-            background = null
-            setTextColor(android.graphics.Color.DKGRAY)
-            textSize = 15f
-        }
-        
-        val scroll = android.widget.ScrollView(context).apply {
-            layoutParams = android.widget.LinearLayout.LayoutParams(
-                android.widget.LinearLayout.LayoutParams.MATCH_PARENT,
-                0,
-                1f
-            )
-            addView(editText)
-        }
-        
-        container.addView(scroll)
-        
-        androidx.appcompat.app.AlertDialog.Builder(context)
-            .setTitle("Page ${pageIndex + 1} Text Selection")
-            .setView(container)
-            .setPositiveButton("Copy All") { _, _ ->
-                val clipboard = context.getSystemService(Context.CLIPBOARD_SERVICE) as android.content.ClipboardManager
-                val clip = android.content.ClipData.newPlainText("Copied Text", text)
-                clipboard.setPrimaryClip(clip)
-                Toast.makeText(context, "Copied to clipboard", Toast.LENGTH_SHORT).show()
-            }
-            .setNegativeButton("Close", null)
-            .show()
-    }
-
-    override fun onPause() {
-        super.onPause()
-        saveLastReadPosition()
-    }
-
     override fun onDestroyView() {
         pdDocument?.close()
         pdDocument = null
-        val rendererToClose = pdfRenderer
-        if (rendererToClose != null) {
-            synchronized(rendererToClose) {
-                try {
-                    rendererToClose.close()
-                } catch (e: Exception) {}
-            }
-        }
-        pdfRenderer = null
-        try {
-            parcelFileDescriptor?.close()
-        } catch (e: Exception) {}
-        parcelFileDescriptor = null
         super.onDestroyView()
         _binding = null
     }

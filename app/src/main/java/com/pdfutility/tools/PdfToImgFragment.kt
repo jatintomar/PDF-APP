@@ -142,8 +142,8 @@ class PdfToImgFragment : Fragment() {
                             totalPages
                         }
                     }
-                } catch (t: Throwable) {
-                    t.printStackTrace()
+                } catch (e: Exception) {
+                    e.printStackTrace()
                     0
                 }
             }

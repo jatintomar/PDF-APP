@@ -108,23 +108,4 @@ class ZoomRecyclerView @JvmOverloads constructor(
         val handled = super.dispatchTouchEvent(ev)
         return handled || mScaleFactor > 1f
     }
-
-    fun getZoomScale(): Float = mScaleFactor
-    fun getTranslationXVal(): Float = mTranslationX
-    fun getTranslationYVal(): Float = mTranslationY
-
-    fun setZoom(scale: Float, transX: Float, transY: Float) {
-        mScaleFactor = scale.coerceIn(1f, 5f)
-        mTranslationX = transX
-        mTranslationY = transY
-        
-        scaleX = mScaleFactor
-        scaleY = mScaleFactor
-        if (mScaleFactor == 1f) {
-            translationX = 0f
-            translationY = 0f
-        } else {
-            updateBounds()
-        }
-    }
 }

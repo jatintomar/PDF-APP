@@ -8,16 +8,6 @@
         app:showAsAction="ifRoom|collapseActionView"
         app:actionViewClass="androidx.appcompat.widget.SearchView" />
     <item
-        android:id="@+id/action_add_bookmark"
-        android:icon="@android:drawable/btn_star_big_off"
-        android:title="Bookmark Page"
-        app:showAsAction="ifRoom" />
-    <item
-        android:id="@+id/action_view_bookmarks"
-        android:icon="@android:drawable/ic_menu_gallery"
-        android:title="Bookmarks"
-        app:showAsAction="ifRoom" />
-    <item
         android:id="@+id/action_jump_to_page"
         android:icon="@android:drawable/ic_menu_directions"
         android:title="Jump to Page"
