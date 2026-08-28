@@ -67,4 +67,7 @@ dependencies {
 
     // High performance PDF Viewer
     implementation("com.artifex.mupdf:viewer:1.28.0a")
+
+    // AndroidX ExifInterface for Image Processing & EXIF metadata handling
+    implementation("androidx.exifinterface:exifinterface:1.3.6")
 }

@@ -111,6 +111,37 @@ object HistoryManager {
     }
 
     @Synchronized
+    fun recordAction(
+        context: Context,
+        actionType: String,
+        name: String,
+        uriString: String?,
+        details: String = ""
+    ) {
+        val toolTitle = when (actionType) {
+            "ROTATE" -> "Rotate PDF"
+            "WATERMARK" -> "Watermark PDF"
+            "IMAGE_TOOLBOX" -> "Image Toolbox"
+            "LOCK" -> "Lock PDF"
+            "UNLOCK" -> "Unlock PDF"
+            "MERGE" -> "Merge PDF"
+            "SPLIT" -> "Split PDF"
+            "COMPRESS" -> "Compress PDF"
+            "SIGN" -> "Sign PDF"
+            "ORGANIZE" -> "Organize PDF"
+            else -> actionType
+        }
+        addHistoryItem(
+            context = context,
+            name = name,
+            originalSize = 0L,
+            compressedSize = 0L,
+            uriString = uriString,
+            toolType = toolTitle
+        )
+    }
+
+    @Synchronized
     fun deleteHistoryItem(context: Context, id: String) {
         val current = getHistory(context).toMutableList()
         current.removeAll { it.id == id }

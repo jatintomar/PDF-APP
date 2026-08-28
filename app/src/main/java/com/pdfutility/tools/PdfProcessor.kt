@@ -1,6 +1,7 @@
 package com.pdfutility.tools
 
 import android.content.Context
+import android.graphics.Bitmap
 import android.net.Uri
 import com.tom_roush.pdfbox.multipdf.PDFMergerUtility
 import com.tom_roush.pdfbox.pdmodel.PDDocument

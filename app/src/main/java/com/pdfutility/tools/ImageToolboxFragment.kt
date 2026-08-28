@@ -118,8 +118,8 @@ class ImageToolboxFragment : Fragment() {
 
         binding.rgFormat.setOnCheckedChangeListener { _, checkedId ->
             currentFormat = when (checkedId) {
-                binding.rbFormat_png.id -> ImageProcessor.ImageFormat.PNG
-                binding.rbFormat_webp.id -> ImageProcessor.ImageFormat.WEBP
+                binding.rbFormatPng.id -> ImageProcessor.ImageFormat.PNG
+                binding.rbFormatWebp.id -> ImageProcessor.ImageFormat.WEBP
                 else -> ImageProcessor.ImageFormat.JPEG
             }
         }
