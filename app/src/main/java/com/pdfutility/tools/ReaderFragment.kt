@@ -42,8 +42,9 @@ class ReaderFragment : Fragment() {
     private var core: MuPDFCore? = null
     private var pdfAdapter: PdfViewerAdapter? = null
     private var currentSearchQuery: String? = null
-    
-    private var pdDocument: PDDocument? = null
+    private var searchJob: kotlinx.coroutines.Job? = null
+    private var searchResults = mutableListOf<Int>()
+    private var currentSearchIndex = -1
 
     private val saveUnlockedLauncher = registerForActivityResult(ActivityResultContracts.CreateDocument("application/pdf")) { uri ->
         if (uri != null) {
@@ -89,17 +90,19 @@ class ReaderFragment : Fragment() {
                 binding.btnSearchPrev.setOnClickListener {
             if (searchResults.isNotEmpty()) {
                 currentSearchIndex = (currentSearchIndex - 1 + searchResults.size) % searchResults.size
-                pdfAdapter?.setSearchQuery(currentSearchQuery, searchResults[currentSearchIndex])
+                val targetPage = searchResults[currentSearchIndex]
+                pdfAdapter?.setSearchQuery(currentSearchQuery, targetPage)
                 updateSearchUI()
-                binding.pdfRecyclerView.scrollToPosition(searchResults[currentSearchIndex])
+                (binding.pdfRecyclerView.layoutManager as? LinearLayoutManager)?.scrollToPositionWithOffset(targetPage, 0)
             }
         }
         binding.btnSearchNext.setOnClickListener {
             if (searchResults.isNotEmpty()) {
                 currentSearchIndex = (currentSearchIndex + 1) % searchResults.size
-                pdfAdapter?.setSearchQuery(currentSearchQuery, searchResults[currentSearchIndex])
+                val targetPage = searchResults[currentSearchIndex]
+                pdfAdapter?.setSearchQuery(currentSearchQuery, targetPage)
                 updateSearchUI()
-                binding.pdfRecyclerView.scrollToPosition(searchResults[currentSearchIndex])
+                (binding.pdfRecyclerView.layoutManager as? LinearLayoutManager)?.scrollToPositionWithOffset(targetPage, 0)
             }
         }
         binding.btnSearchClose.setOnClickListener {
@@ -146,10 +149,24 @@ class ReaderFragment : Fragment() {
                 val searchItem = menu.findItem(com.pdfutility.tools.R.id.action_search)
                 val searchView = searchItem?.actionView as? androidx.appcompat.widget.SearchView
                 
+                searchView?.queryHint = "Search in document..."
+                searchItem?.setOnActionExpandListener(object : android.view.MenuItem.OnActionExpandListener {
+                    override fun onMenuItemActionExpand(item: android.view.MenuItem): Boolean {
+                        return true
+                    }
+
+                    override fun onMenuItemActionCollapse(item: android.view.MenuItem): Boolean {
+                        clearSearch()
+                        return true
+                    }
+                })
+
                 searchView?.setOnQueryTextListener(object : androidx.appcompat.widget.SearchView.OnQueryTextListener {
                     override fun onQueryTextSubmit(query: String?): Boolean {
-                        if (!query.isNullOrEmpty()) {
-                            performSearch(query)
+                        searchJob?.cancel()
+                        if (!query.isNullOrBlank()) {
+                            performSearch(query.trim())
+                            searchView.clearFocus()
                         } else {
                             clearSearch()
                         }
@@ -157,8 +174,14 @@ class ReaderFragment : Fragment() {
                     }
 
                     override fun onQueryTextChange(newText: String?): Boolean {
-                        if (newText.isNullOrEmpty()) {
+                        searchJob?.cancel()
+                        if (newText.isNullOrBlank()) {
                             clearSearch()
+                        } else if (newText.trim().length >= 2) {
+                            searchJob = lifecycleScope.launch {
+                                kotlinx.coroutines.delay(350)
+                                performSearch(newText.trim())
+                            }
                         }
                         return true
                     }
@@ -370,45 +393,69 @@ class ReaderFragment : Fragment() {
         }
     }
 
-    private var searchResults = mutableListOf<Int>()
-    private var currentSearchIndex = -1
-
     private fun performSearch(query: String) {
-        if (query.isEmpty()) return
+        val cleanQuery = query.trim()
+        if (cleanQuery.isEmpty() || totalPages <= 0) return
+        
+        searchJob?.cancel()
+        currentSearchQuery = cleanQuery
         binding.pbRendering.visibility = View.VISIBLE
-        binding.llSearchNavigation.visibility = View.GONE
         binding.rlVerticalScrollbar.visibility = View.GONE
         
-        lifecycleScope.launch {
+        searchJob = lifecycleScope.launch {
             val matches = withContext(Dispatchers.IO) {
                 val results = mutableListOf<Int>()
                 for (i in 0 until totalPages) {
-                    val boxes = core?.searchPage(i, query)
-                    if (boxes != null && boxes.isNotEmpty()) {
+                    var boxes = core?.searchPage(i, cleanQuery)
+                    if (boxes.isNullOrEmpty()) {
+                        boxes = core?.searchPage(i, cleanQuery.lowercase())
+                    }
+                    if (boxes.isNullOrEmpty()) {
+                        boxes = core?.searchPage(i, cleanQuery.uppercase())
+                    }
+                    if (boxes.isNullOrEmpty()) {
+                        boxes = core?.searchPage(i, cleanQuery.replaceFirstChar { if (it.isLowerCase()) it.titlecase() else it.toString() })
+                    }
+                    
+                    if (!boxes.isNullOrEmpty()) {
                         results.add(i)
+                    } else if (pdDocument != null && i < pdDocument!!.numberOfPages) {
+                        try {
+                            val stripper = com.tom_roush.pdfbox.text.PDFTextStripper().apply {
+                                startPage = i + 1
+                                endPage = i + 1
+                            }
+                            val pageText = stripper.getText(pdDocument)
+                            if (pageText.contains(cleanQuery, ignoreCase = true)) {
+                                results.add(i)
+                            }
+                        } catch (e: Exception) {
+                            // ignore
+                        }
                     }
                 }
                 results
             }
 
             binding.pbRendering.visibility = View.GONE
-            currentSearchQuery = query
             
             if (matches.isNotEmpty()) {
                 searchResults.clear()
                 searchResults.addAll(matches)
                 currentSearchIndex = 0
+                val targetPage = searchResults[0]
                 
-                pdfAdapter?.setSearchQuery(query, searchResults[currentSearchIndex])
+                pdfAdapter?.setSearchQuery(cleanQuery, targetPage)
                 
                 binding.llSearchNavigation.visibility = View.VISIBLE
                 updateSearchUI()
-                binding.pdfRecyclerView.scrollToPosition(searchResults[currentSearchIndex])
+                (binding.pdfRecyclerView.layoutManager as? LinearLayoutManager)?.scrollToPositionWithOffset(targetPage, 0)
             } else {
                 pdfAdapter?.setSearchQuery(null, -1)
                 searchResults.clear()
                 currentSearchIndex = -1
-                Toast.makeText(requireContext(), "No matches found for '$query'", Toast.LENGTH_SHORT).show()
+                binding.llSearchNavigation.visibility = View.GONE
+                Toast.makeText(requireContext(), "No matches found for '$cleanQuery'", Toast.LENGTH_SHORT).show()
                 if (totalPages > 1) {
                     binding.rlVerticalScrollbar.visibility = View.VISIBLE
                 }
@@ -417,6 +464,7 @@ class ReaderFragment : Fragment() {
     }
 
     private fun clearSearch() {
+        searchJob?.cancel()
         currentSearchQuery = null
         pdfAdapter?.setSearchQuery(null, -1)
         binding.llSearchNavigation.visibility = View.GONE
@@ -432,7 +480,7 @@ class ReaderFragment : Fragment() {
             binding.llSearchNavigation.visibility = View.GONE
             return
         }
-        binding.tvSearchResult.text = "${currentSearchIndex + 1} of ${searchResults.size}"
+        binding.tvSearchResult.text = "Match ${currentSearchIndex + 1} of ${searchResults.size} (Page ${searchResults[currentSearchIndex] + 1})"
     }
 
     private fun showEmptyState(message: String? = null) {

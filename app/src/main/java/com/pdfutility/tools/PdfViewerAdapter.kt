@@ -112,25 +112,46 @@ class PdfViewerAdapter(
                         bitmap.eraseColor(Color.WHITE)
                         core.drawPage(bitmap, position, width, height, 0, 0, width, height, null)
                         
-                        val q = searchQuery
-                        if (!q.isNullOrEmpty() && position == highlightPage) {
-                            val boxes = core.searchPage(position, q)
-                            if (boxes != null && boxes.isNotEmpty()) {
+                        val q = searchQuery?.trim()
+                        if (!q.isNullOrEmpty()) {
+                            // Find all match boxes with case variations
+                            var boxes = core.searchPage(position, q)
+                            if (boxes.isNullOrEmpty()) {
+                                boxes = core.searchPage(position, q.lowercase())
+                            }
+                            if (boxes.isNullOrEmpty()) {
+                                boxes = core.searchPage(position, q.uppercase())
+                            }
+                            if (boxes.isNullOrEmpty()) {
+                                boxes = core.searchPage(position, q.replaceFirstChar { if (it.isLowerCase()) it.titlecase() else it.toString() })
+                            }
+                            
+                            if (!boxes.isNullOrEmpty()) {
                                 val canvas = Canvas(bitmap)
-                                val paint = Paint().apply {
-                                    color = Color.argb(128, 255, 255, 0)
+                                val isCurrentFocusedPage = (position == highlightPage)
+                                
+                                val fillPaint = Paint(Paint.ANTI_ALIAS_FLAG).apply {
+                                    color = if (isCurrentFocusedPage) Color.argb(160, 255, 170, 0) else Color.argb(120, 255, 235, 59)
                                     style = Paint.Style.FILL
                                 }
+                                val strokePaint = Paint(Paint.ANTI_ALIAS_FLAG).apply {
+                                    color = if (isCurrentFocusedPage) Color.argb(220, 230, 81, 0) else Color.argb(150, 251, 192, 45)
+                                    style = Paint.Style.STROKE
+                                    strokeWidth = 2f * density
+                                }
+
                                 for (boxArray in boxes) {
                                     for (quad in boxArray) {
-                                        // quad coordinates are relative to the original page size, so scale them
-                                        canvas.drawRect(
-                                            quad.ul_x * scale,
-                                            quad.ul_y * scale,
-                                            quad.lr_x * scale,
-                                            quad.lr_y * scale,
-                                            paint
-                                        )
+                                        val left = minOf(quad.ul_x, quad.ll_x, quad.ur_x, quad.lr_x) * scale
+                                        val right = maxOf(quad.ul_x, quad.ll_x, quad.ur_x, quad.lr_x) * scale
+                                        val top = minOf(quad.ul_y, quad.ll_y, quad.ur_y, quad.lr_y) * scale
+                                        val bottom = maxOf(quad.ul_y, quad.ll_y, quad.ur_y, quad.lr_y) * scale
+                                        
+                                        if (right > left && bottom > top) {
+                                            val rect = android.graphics.RectF(left - 2f, top - 1f, right + 2f, bottom + 1f)
+                                            canvas.drawRoundRect(rect, 3f * density, 3f * density, fillPaint)
+                                            canvas.drawRoundRect(rect, 3f * density, 3f * density, strokePaint)
+                                        }
                                     }
                                 }
                             }
