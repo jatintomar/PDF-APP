@@ -1,6 +1,8 @@
 {
   "name": "PDF Utility Tools",
-  "description": "A full-featured PDF utility app to lock, unlock, merge, and split PDF documents with full offline support and an exportable native Android Studio project with automated GitHub Actions compilation.",
+  "description": "Privacy-first, on-device PDF utility suite with comprehensive local document processing and multi-source document discovery.",
   "requestFramePermissions": [],
-  "majorCapabilities": []
+  "majorCapabilities": [
+    "MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"
+  ]
 }

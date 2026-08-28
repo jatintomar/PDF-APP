@@ -37,7 +37,7 @@ class DashboardFragment : Fragment() {
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
-        (activity as? androidx.appcompat.app.AppCompatActivity)?.supportActionBar?.title = "PDF Utility Workspace"
+        (activity as? androidx.appcompat.app.AppCompatActivity)?.supportActionBar?.title = "PDF Utility Tools"
 
         setupCoreClicks()
         setupQuickActionWidgets()
@@ -55,6 +55,9 @@ class DashboardFragment : Fragment() {
         binding.cardPdfToImg.setOnClickListener { navigateTo(PdfToImgFragment()) }
         binding.cardPdfCompress.setOnClickListener { navigateTo(PdfCompressFragment()) }
         binding.cardImgCompress.setOnClickListener { navigateTo(ImgCompressFragment()) }
+        binding.cardRotate.setOnClickListener { navigateTo(RotateFragment()) }
+        binding.cardWatermark.setOnClickListener { navigateTo(WatermarkFragment()) }
+        binding.cardImageToolbox.setOnClickListener { navigateTo(ImageToolboxFragment()) }
 
         binding.cardPdfDiscoveryBanner.setOnClickListener {
             it.performHapticFeedback(HapticFeedbackConstants.VIRTUAL_KEY)

@@ -725,6 +725,139 @@ object PdfProcessor {
     }
 
     /**
+     * Rotates all or selected pages of a PDF document by 90, 180, or 270 degrees.
+     */
+    fun rotatePdf(context: Context, inputUri: Uri, rotationAngle: Int, outputFile: File) {
+        context.contentResolver.openInputStream(inputUri).use { inputStream ->
+            if (inputStream == null) throw Exception("Cannot open file stream")
+            PDDocument.load(inputStream).use { document ->
+                cleanWatermark(document)
+                for (page in document.pages) {
+                    val currentRotation = page.rotation
+                    page.rotation = (currentRotation + rotationAngle) % 360
+                }
+                FileOutputStream(outputFile).use { outputStream ->
+                    document.save(outputStream)
+                }
+            }
+        }
+    }
+
+    /**
+     * Applies a text watermark across all pages in a PDF document.
+     */
+    fun watermarkPdf(context: Context, inputUri: Uri, watermarkText: String, outputFile: File) {
+        context.contentResolver.openInputStream(inputUri).use { inputStream ->
+            if (inputStream == null) throw Exception("Cannot open file stream")
+            PDDocument.load(inputStream).use { document ->
+                cleanWatermark(document)
+                val font = com.tom_roush.pdfbox.pdmodel.font.PDType1Font.HELVETICA_BOLD
+                val fontSize = 36f
+                for (page in document.pages) {
+                    val mediaBox = page.mediaBox
+                    val width = mediaBox.width
+                    val height = mediaBox.height
+                    
+                    com.tom_roush.pdfbox.pdmodel.PDPageContentStream(
+                        document, 
+                        page, 
+                        com.tom_roush.pdfbox.pdmodel.PDPageContentStream.AppendMode.APPEND, 
+                        true, 
+                        true
+                    ).use { contentStream ->
+                        contentStream.beginText()
+                        contentStream.setFont(font, fontSize)
+                        contentStream.setNonStrokingColor(180, 180, 180)
+                        val textWidth = font.getStringWidth(watermarkText) / 1000f * fontSize
+                        val x = (width - textWidth) / 2f
+                        val y = height / 2f
+                        contentStream.newLineAtOffset(x, y)
+                        contentStream.showText(watermarkText)
+                        contentStream.endText()
+                    }
+                }
+                FileOutputStream(outputFile).use { outputStream ->
+                    document.save(outputStream)
+                }
+            }
+        }
+    }
+
+    /**
+     * Reorders or removes pages from a PDF.
+     * @param pageIndices 0-based list of page indices in the desired final order.
+     */
+    fun reorderOrDeletePages(context: Context, inputUri: Uri, pageIndices: List<Int>, outputFile: File) {
+        context.contentResolver.openInputStream(inputUri).use { inputStream ->
+            if (inputStream == null) throw Exception("Cannot open file stream")
+            PDDocument.load(inputStream).use { srcDoc ->
+                cleanWatermark(srcDoc)
+                PDDocument().use { destDoc ->
+                    for (index in pageIndices) {
+                        if (index in 0 until srcDoc.numberOfPages) {
+                            destDoc.addPage(srcDoc.getPage(index))
+                        }
+                    }
+                    FileOutputStream(outputFile).use { outputStream ->
+                        destDoc.save(outputStream)
+                    }
+                }
+            }
+        }
+    }
+
+    /**
+     * Stamps an image/drawn signature onto a specified page of a PDF document.
+     */
+    fun signPdf(
+        context: Context,
+        inputUri: Uri,
+        signatureBitmap: Bitmap,
+        pageIndex: Int,
+        normX: Float,
+        normY: Float,
+        normWidth: Float,
+        normHeight: Float,
+        outputFile: File
+    ) {
+        context.contentResolver.openInputStream(inputUri).use { inputStream ->
+            if (inputStream == null) throw Exception("Cannot open file stream")
+            PDDocument.load(inputStream).use { document ->
+                cleanWatermark(document)
+                if (pageIndex in 0 until document.numberOfPages) {
+                    val page = document.getPage(pageIndex)
+                    val mediaBox = page.mediaBox
+                    val pageWidth = mediaBox.width
+                    val pageHeight = mediaBox.height
+
+                    val stream = java.io.ByteArrayOutputStream()
+                    signatureBitmap.compress(Bitmap.CompressFormat.PNG, 100, stream)
+                    val imageBytes = stream.toByteArray()
+                    val pdImage = com.tom_roush.pdfbox.pdmodel.graphics.image.PDImageXObject.createFromByteArray(document, imageBytes, "signature")
+
+                    val posX = normX * pageWidth
+                    val posY = normY * pageHeight
+                    val stampWidth = normWidth * pageWidth
+                    val stampHeight = normHeight * pageHeight
+
+                    com.tom_roush.pdfbox.pdmodel.PDPageContentStream(
+                        document,
+                        page,
+                        com.tom_roush.pdfbox.pdmodel.PDPageContentStream.AppendMode.APPEND,
+                        true,
+                        true
+                    ).use { contentStream ->
+                        contentStream.drawImage(pdImage, posX, posY, stampWidth, stampHeight)
+                    }
+                }
+                FileOutputStream(outputFile).use { outputStream ->
+                    document.save(outputStream)
+                }
+            }
+        }
+    }
+
+    /**
      * Gets the file name from a Uri.
      */
     fun getFileName(context: Context, uri: Uri): String {

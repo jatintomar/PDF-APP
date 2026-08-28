@@ -1,5 +1,5 @@
-# Document Utility Tools
-> **Lightweight, Privacy-First Native Android Document Processor & Manager**
+# PDF Utility Tools
+> **100% Privacy-First, On-Device Native Android PDF Suite & Document Reader**
 
 [![Platform](https://img.shields.io/badge/platform-Android-3DDC84?style=flat-square&logo=android&logoColor=white)](https://developer.android.com/)
 [![Language](https://img.shields.io/badge/language-Kotlin-7F52FF?style=flat-square&logo=kotlin&logoColor=white)](https://kotlinlang.org/)
@@ -7,82 +7,78 @@
 [![Build Status](https://img.shields.io/badge/build-passing-brightgreen?style=flat-square&logo=github-actions&logoColor=white)](https://github.com/)
 [![Security](https://img.shields.io/badge/security-100%25%20Offline-success?style=flat-square&logo=shield&logoColor=white)](#security--privacy)
 
-**Document Utility Tools** is a high-performance, fully secure, and privacy-focused native Android application written in Kotlin. It empowers users to read, manage, encrypt, and compress standard PDF and Microsoft Word DOCX files entirely client-side, with zero external server dependencies or cloud transmissions.
+**PDF Utility Tools** is a high-performance, privacy-focused native Android application designed to merge, split, compress, protect, rotate, watermark, convert, and view PDF documents entirely on-device with zero cloud dependencies and an enhanced multi-source PDF discovery system.
 
 ---
 
 ## 📱 App Interface & Visuals
 
-The application utilizes Google's modern **Material You (Material 3)** design principles to deliver an immersive, dynamic, and intuitive user experience.
+The application utilizes Google's modern **Material You (Material 3)** design principles to deliver an intuitive, clean, and distraction-free document experience.
 
-| Dashboard Overview | PDF & DOCX Reader | Advanced Document Compressor |
+| Dashboard Overview | PDF Reader & Viewer | Document Discovery & Sources |
 | :---: | :---: | :---: |
-| <img src="https://images.unsplash.com/photo-1607604276583-eef5d076aa5f?q=80&w=350&auto=format&fit=crop" width="240" alt="Dashboard Screen Mockup" /> | <img src="https://images.unsplash.com/photo-1544383835-bda2bc66a55d?q=80&w=350&auto=format&fit=crop" width="240" alt="Document Reader Screen" /> | <img src="https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?q=80&w=350&auto=format&fit=crop" width="240" alt="Compressor Parameters" /> |
-
-*(Note: Real screenshots of your locally compiled build can be committed to the `/assets` directory to instantly update these previews).*
+| <img src="https://images.unsplash.com/photo-1607604276583-eef5d076aa5f?q=80&w=350&auto=format&fit=crop" width="240" alt="Dashboard Screen Mockup" /> | <img src="https://images.unsplash.com/photo-1544383835-bda2bc66a55d?q=80&w=350&auto=format&fit=crop" width="240" alt="Document Reader Screen" /> | <img src="https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?q=80&w=350&auto=format&fit=crop" width="240" alt="Document Sources" /> |
 
 ---
 
 ## 🌟 Key Features
 
-### 📄 Advanced PDF & DOCX Reader
-* **Dual Format Support:** Render both standard PDF files and Microsoft Word Document (`.docx`) file structures side-by-side natively.
-* **Liquid Scrolling:** Zero-latency rendering of pages with fluid zoom controls and rapid page navigation.
-* **Integrated Text Search:** Scan files offline to find exact matches and highlight text segments instantly.
+### 📄 Fluid PDF Reader & Viewer
+* **High-Res Rendering:** Zero-latency continuous page rendering with multi-touch zoom and pinch controls.
+* **Night Mode & Inverted Views:** High contrast reading options for low-light environments.
+* **Integrated Search & Navigation:** Fast page jump and keyword highlighting across documents.
 
 ### 🔗 Document Merger & Splitter
-* **Lossless Assembly:** Combine an unlimited number of separate documents in custom sequence into a single, high-fidelity PDF.
-* **Exact Page Extraction:** Split heavy books or documents into individual single-page elements or specify customized range splits.
+* **Lossless Merging:** Combine multiple PDF documents with custom drag-and-drop page order.
+* **Precision Extraction:** Split documents by custom page numbers or specific ranges into lightweight files.
 
-### 🔒 Cryptographic Protection & Decryption
-* **Secure Encryption:** Enforce standard 128-bit PDF user and owner passwords to safeguard private information.
-* **Authorized Decryption:** Fast, seamless unlock pipeline to strip protection layers from credentials you own.
+### 🔒 Cryptographic Lock & Decryptor
+* **Secure Encryption:** Enforce standard 128-bit PDF user and owner passwords.
+* **Unlock & Decrypt:** Instant protection removal for authorized credential holders.
 
-### 📉 Intelligent Multi-Step Compressor
-* **Dynamic Compression:** Scale bulky files down by up to 80% without losing readable text layout.
-* **Custom Parameter Sliders:** Tune image resolution scaling and compression quality directly inside the native interface.
+### 📉 Smart PDF & Image Compressor
+* **Adaptive Compression:** Reduce file sizes significantly while maintaining crisp typography.
+* **Custom Presets:** Interactive sliders for DPI and quality adjustments.
 
-### 🖼️ Seamless Image Converters
-* **Image to PDF Sheet:** Assemble multiple raw gallery or camera images into structured, aligned PDF document blocks.
-* **PDF to Image Grid:** Extract individual document pages and export them as high-quality standard JPEG or PNG files.
+### 🎨 Powerful Image Toolbox Engine (Inspired by T8RIN/ImageToolbox)
+* **Preset Filters & Color Tuning:** Grayscale, Sepia, Vintage, Warm, Cool, High Contrast, Invert, Vignette, and Black & White document filter chains.
+* **Sliders & Controls:** Real-time brightness, contrast multiplier, and saturation tuning with live preview.
+* **Transforms:** Rotate 90° CW, Flip Horizontal, and Flip Vertical.
+* **Multi-Image Stitching & Stacking:** Seamlessly combine screenshots or photos into vertical continuous strips or horizontal grids.
+* **EXIF Sanitization:** Strip location and hardware tracking metadata automatically upon export.
+* **Format & Quality Control:** Export to JPEG, PNG, or WEBP with fine-grained compression quality sliders.
+
+### 🔄 Image & PDF Converters
+* **Image to PDF:** Convert photos and scanned sheets into organized, single or multi-page PDFs.
+* **PDF to Image:** Export individual pages as PNG, JPG, or WebP images.
+* **Rotate & Watermark:** Rotate pages in 90° increments and stamp custom security watermarks.
+
+### 📁 Multi-Source PDF Discovery Subsystem
+* **Storage Access Framework (SAF):** Direct integration with system file pickers and external storage providers.
+* **Folder Categorization:** Auto-indexes device folders including WhatsApp Documents, Telegram, Downloads, and custom folders.
+* **Recent Activity Carousel:** Instant access to recently manipulated documents and reading history.
 
 ---
 
 ## 🔒 Security & Privacy
 
-This application is built from the ground up to guarantee maximum data protection:
-* **No Cloud Overhead:** All file rendering, compression, split, merge, and encryption tasks are performed **locally** within the device sandboxed environment.
-* **Zero Network Logs:** The application does not require or request internet permissions.
-* **Storage Access Framework (SAF):** Full compliance with modern scoped storage guidelines, allowing you to choose exactly which folder directories the app can read or write.
+* **100% On-Device:** All file processing happens locally inside the sandboxed Android process.
+* **Zero Telemetry:** No tracking, no ads, and no external server uploads.
+* **Scoped Storage Compliant:** Grants granular control over file directory access.
 
 ---
 
 ## 🛠️ Architecture & Tech Stack
 
-* **Language:** Kotlin 1.9+ (Modern functional syntax)
-* **Design Pattern:** MVVM (Model-View-ViewModel) with structured Clean Architecture
-* **Asynchronous Engine:** Kotlin Coroutines & Flow (For fluid background execution of heavy tasks)
-* **View Bindings:** Android Jetpack ViewBinding for type-safe view interaction
-* **UI Framework:** Android XML with Google Material Design 3 Components
-* **Build System:** Gradle 8.2 (Kotlin DSL)
+* **Language:** Kotlin 1.9+
+* **Design Pattern:** MVVM with Clean Architecture
+* **PDF Engines:** MuPDF & Apache PDFBox (Android optimized)
+* **UI Framework:** Google Material 3 Components with Jetpack ViewBinding
+* **Build System:** Gradle (Kotlin DSL)
 
 ---
 
 ## ⚙️ Developer Compilation & Build Manual
-
-To compile and assemble the application APK from source code, follow these standard steps:
-
-### 1. Prerequisites
-Ensure you have the following installed on your machine:
-* **JDK 17** (Temurin distribution recommended)
-* **Android Studio Hedgehog** (2023.1.1) or higher
-* **Android SDK API Level 33** (Android 13.0) or higher
-
-### 2. Synchronize the Workspace
-Clone or download the project files. Open Android Studio, select **Open Project**, choose the root directory, and allow the system to complete the initial Gradle synchronization.
-
-### 3. Assemble Release Artifact
-You can build the application directly via the IDE, or execute the Gradle build task from your terminal:
 
 ```bash
 # Set execute permissions for the wrapper (Linux/macOS)
@@ -92,15 +88,5 @@ chmod +x gradlew
 ./gradlew assembleRelease
 ```
 
-Once completed, the release package will be generated at:
+The APK will be generated at:
 `app/build/outputs/apk/release/app-release-unsigned.apk`
-
----
-
-## 🤖 Continuous Integration (CI/CD)
-
-The project includes a robust **GitHub Actions** build workflow located at `.github/workflows/gradle-build.yml`. Every time you push a code update or merge requests to GitHub, the CI pipeline automatically:
-1. Spawns an Ubuntu runtime container.
-2. Initializes JDK 17.
-3. Downloads secure Android SDK Platforms.
-4. Assembles the APK package and compiles all classes to ensure code health is 100% green.

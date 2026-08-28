@@ -48,7 +48,7 @@ export default function App() {
     <div className="min-h-screen bg-slate-50 dark:bg-slate-950 text-slate-800 dark:text-slate-200 antialiased font-sans transition-colors duration-300">
       {/* Top Banner / Announcement */}
       <div className="bg-blue-600 dark:bg-blue-900 text-white text-xs font-semibold py-2 px-4 text-center tracking-wide">
-        🎉 Version 1.2.0 Released: Added native DOCX format reading and viewer capability!
+        ⚡ PDF Utility Tools: 100% Privacy-First, On-Device PDF Processing Suite &amp; Multi-Source Document Reader
       </div>
 
       {/* Navigation Header */}
@@ -56,8 +56,8 @@ export default function App() {
         <div className="flex items-center gap-3">
           <AppLogo size="md" />
           <div>
-            <h1 className="text-lg font-bold text-slate-900 dark:text-white tracking-tight leading-none">Document Utility Tools</h1>
-            <p className="text-[10px] text-slate-500 dark:text-slate-400 font-medium mt-1">Lightweight Android Document Processor</p>
+            <h1 className="text-lg font-bold text-slate-900 dark:text-white tracking-tight leading-none">PDF Utility Tools</h1>
+            <p className="text-[10px] text-slate-500 dark:text-slate-400 font-medium mt-1">Privacy-First On-Device PDF Suite &amp; Reader</p>
           </div>
         </div>
 
@@ -91,13 +91,13 @@ export default function App() {
       <section className="py-16 px-6 md:px-12 max-w-6xl mx-auto grid grid-cols-1 lg:grid-cols-12 gap-12 items-center">
         <div className="lg:col-span-7 space-y-6">
           <div className="inline-flex items-center gap-1.5 px-2.5 py-1 bg-blue-50 dark:bg-blue-950/40 text-blue-700 dark:text-blue-400 rounded-full text-[10px] font-bold uppercase tracking-wider border border-blue-100/30">
-            <ShieldCheck className="w-3 h-3" /> Fully Offline &amp; Secure
+            <ShieldCheck className="w-3 h-3" /> 100% On-Device &amp; Private
           </div>
           <h2 className="text-4xl md:text-5xl font-black text-slate-950 dark:text-white tracking-tight leading-none">
-            The ultimate offline <span className="text-blue-600 dark:text-blue-400">Document Utility</span> for Android.
+            The complete offline <span className="text-blue-600 dark:text-blue-400">PDF Utility Suite</span> for Android.
           </h2>
           <p className="text-slate-600 dark:text-slate-300 text-base md:text-lg leading-relaxed max-w-xl">
-            A privacy-first, blazing-fast native Android application designed to read, lock, unlock, compress, split, and merge your PDF and DOCX files without ever uploading them to any external servers.
+            A fast, ad-free, privacy-first native Android PDF utility and reader. Merge, split, compress, protect, rotate, watermark, convert, and discover documents across all your device storage sources with zero server uploads.
           </p>
 
           <div className="flex flex-wrap gap-3 pt-2">
@@ -123,8 +123,8 @@ export default function App() {
             <div className="flex items-center gap-3 border-b border-slate-100 dark:border-slate-800 pb-4">
               <AppLogo size="sm" />
               <div>
-                <h4 className="text-sm font-bold text-slate-900 dark:text-white">Android Project Specs</h4>
-                <p className="text-[10px] text-slate-500 dark:text-slate-400">Target Environment Configuration</p>
+                <h4 className="text-sm font-bold text-slate-900 dark:text-white">PDF Utility Tools Specs</h4>
+                <p className="text-[10px] text-slate-500 dark:text-slate-400">On-Device Processing &amp; Storage</p>
               </div>
             </div>
 
@@ -138,8 +138,12 @@ export default function App() {
                 <span className="font-bold text-slate-800 dark:text-slate-200 bg-slate-100 dark:bg-slate-800 px-2 py-0.5 rounded text-[10px]">MVVM / Clean Arch</span>
               </div>
               <div className="flex justify-between items-center text-xs">
-                <span className="text-slate-500 dark:text-slate-400 font-medium">Build Toolchain</span>
-                <span className="font-bold text-slate-800 dark:text-slate-200 bg-slate-100 dark:bg-slate-800 px-2 py-0.5 rounded text-[10px]">Gradle Kotlin DSL</span>
+                <span className="text-slate-500 dark:text-slate-400 font-medium">PDF Engine</span>
+                <span className="font-bold text-slate-800 dark:text-slate-200 bg-slate-100 dark:bg-slate-800 px-2 py-0.5 rounded text-[10px]">MuPDF + PDFBox</span>
+              </div>
+              <div className="flex justify-between items-center text-xs">
+                <span className="text-slate-500 dark:text-slate-400 font-medium">PDF Sources</span>
+                <span className="font-bold text-blue-600 dark:text-blue-400 bg-blue-50 dark:bg-blue-950/30 px-2 py-0.5 rounded text-[10px]">SAF + MediaStore + Folders</span>
               </div>
               <div className="flex justify-between items-center text-xs">
                 <span className="text-slate-500 dark:text-slate-400 font-medium">Minimum Android SDK</span>
@@ -150,13 +154,13 @@ export default function App() {
                 <span className="font-bold text-slate-800 dark:text-slate-200 bg-slate-100 dark:bg-slate-800 px-2 py-0.5 rounded text-[10px]">API 34 (Android 14)</span>
               </div>
               <div className="flex justify-between items-center text-xs">
-                <span className="text-slate-500 dark:text-slate-400 font-medium">Offline Core Engine</span>
-                <span className="font-bold text-emerald-600 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-950/30 border border-emerald-100 dark:border-emerald-900/40 px-2 py-0.5 rounded text-[10px]">100% Client-Side</span>
+                <span className="text-slate-500 dark:text-slate-400 font-medium">Privacy Status</span>
+                <span className="font-bold text-emerald-600 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-950/30 border border-emerald-100 dark:border-emerald-900/40 px-2 py-0.5 rounded text-[10px]">100% Offline &amp; Ad-Free</span>
               </div>
             </div>
 
             <div className="pt-3 border-t border-slate-100 dark:border-slate-800 text-[10px] text-slate-500 dark:text-slate-400 leading-relaxed">
-              * Fully local processing utilizing <strong>Android Storage Access Framework (SAF)</strong> and sandboxed directory security. Zero external web calls.
+              * Operates completely offline with <strong>Android Storage Access Framework (SAF)</strong> and multi-directory discovery. Zero external network tracking.
             </div>
           </div>
         </div>
@@ -222,9 +226,9 @@ export default function App() {
               <div className="w-10 h-10 bg-indigo-100 dark:bg-indigo-950 text-indigo-600 dark:text-indigo-400 rounded-xl flex items-center justify-center font-bold">
                 <FolderSync className="w-5 h-5" />
               </div>
-              <h5 className="font-bold text-slate-900 dark:text-white text-base">Fidelity Image Converters</h5>
+              <h5 className="font-bold text-slate-900 dark:text-white text-base">Image Toolbox &amp; Converters</h5>
               <p className="text-slate-600 dark:text-slate-300 text-sm leading-relaxed">
-                Convert high-resolution camera images into clean, structured PDF sheets or export PDF page grids as standard JPG or PNG images instantly.
+                Powered by our Image Toolbox engine: on-device filters (Grayscale, Sepia, Vintage, Invert, Vignette), color &amp; tone tuning, transforms, EXIF stripping, multi-image stitching, and image/PDF conversions.
               </p>
             </div>
 
@@ -333,10 +337,10 @@ export default function App() {
         </div>
       </section>
 
-      {/* Clean Footer with absolutely no AI labels */}
+      {/* Clean Footer */}
       <footer className="bg-white dark:bg-slate-900 border-t border-slate-200 dark:border-slate-800 py-8 px-6 text-center text-xs text-slate-500 dark:text-slate-400 font-medium tracking-tight transition-colors duration-300">
-        <div>&copy; 2026 Document Utility Tools. All Rights Reserved.</div>
-        <div className="text-[10px] text-slate-400 dark:text-slate-500 mt-1">Made in offline developer workspace. Premium compilation available.</div>
+        <div>&copy; 2026 PDF Utility Tools. All Rights Reserved.</div>
+        <div className="text-[10px] text-slate-400 dark:text-slate-500 mt-1">100% Privacy-First, On-Device PDF Processing Suite. Fast, Ad-Free &amp; Completely Offline.</div>
       </footer>
     </div>
   );

@@ -6,6 +6,8 @@
     <string name="split_pdf">Split PDF</string>
     <string name="img_to_pdf">Image to PDF</string>
     <string name="pdf_to_img">PDF to Image</string>
+    <string name="rotate_pdf">Rotate PDF</string>
+    <string name="watermark_pdf">Watermark PDF</string>
     <string name="pdf_reader">PDF Reader</string>
     <string name="select_pdf">Select PDF File</string>
     <string name="select_multiple_pdfs">Select PDF Files</string>
